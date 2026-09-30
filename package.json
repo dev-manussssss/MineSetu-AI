@@ -4,6 +4,7 @@
   "private": true,
   "description": "MDMS + Mindsetu AI — Prototype of an AI-enabled extension layer around MDMS workflows",
   "scripts": {
+    "start": "./start.sh",
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "typecheck": "npm --prefix frontend run build",
