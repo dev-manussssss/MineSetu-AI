@@ -1,0 +1,24 @@
+{
+  "name": "minesetu-master",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MDMS + Mindsetu AI — Prototype of an AI-enabled extension layer around MDMS workflows",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "typecheck": "npm --prefix frontend run build",
+    "test": "node --test tests/rbac.test.mjs",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview"
+  },
+  "keywords": [
+    "mdms",
+    "mindsetu",
+    "mining",
+    "rag",
+    "document-intelligence",
+    "topic-modeling"
+  ],
+  "author": "MineSetu Engineering Team",
+  "license": "UNLICENSED"
+}

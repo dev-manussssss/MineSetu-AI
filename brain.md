@@ -63,12 +63,30 @@ IMPACT: Authentic domain feel with full compliance with Section 1.2 and Section 
 FILES AFFECTED: mock-dataset.md, frontend/src/data/mockMiningData.ts
 ```
 
+```text
+DATE: 2026-09-30
+DECISION: Human-in-the-Loop Validation Workbench with Side-by-Side Facsimile.
+WHY: Inserting AI safely into MDMS requires human confirmation before extracted records become authoritative. The split view presents immutable source form against editable extracted fields with explicit confidence scores.
+ALTERNATIVES CONSIDERED: Blind automated ingestion straight to database.
+IMPACT: Zero unauthorized database contamination; complete lineage tracking and audit logging.
+FILES AFFECTED: frontend/src/pages/ValidationWorkbenchPage.tsx, ai-pipeline.md
+```
+
+```text
+DATE: 2026-09-30
+DECISION: Anti-Hallucination Guardrail in AI Query with Neutral Variance Terminology.
+WHY: In statutory and mining operations, guessing or fabricating numbers is unacceptable. When evidence is missing, the system explicitly returns "Insufficient source evidence" and uses neutral "Difference detected" rather than "AI found an error".
+ALTERNATIVES CONSIDERED: Generic LLM completion without source validation.
+IMPACT: Reliable, audit-compliant question answering that respects institutional caution.
+FILES AFFECTED: frontend/src/context/AppContext.tsx, frontend/src/pages/QueryPage.tsx, frontend/src/pages/ComparePage.tsx
+```
+
 ---
 
 ## 4. Unresolved Questions & Assumptions
 
-- **Assumption**: Supabase and Grok/xAI credentials may not be supplied during initial local run; the app must provide seamless synthetic fallback data and mock Grok AI responses while being 100% ready to bind real credentials via `.env`.
-- **Assumption**: The 13 installed skills mentioned in Section 30 will be logged as they are explicitly triggered in the development flow.
+- **Assumption**: Supabase and Grok/xAI credentials may not be supplied during initial local run; the app provides seamless synthetic fallback data and mock Grok AI responses while being 100% ready to bind real credentials via `.env`.
+- **Status**: Verified in local build and test execution.
 
 ---
 
