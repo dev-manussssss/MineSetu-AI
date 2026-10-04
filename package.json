@@ -7,8 +7,11 @@
     "start": "./start.sh",
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
-    "typecheck": "npm --prefix frontend run build",
-    "test": "node --test tests/rbac.test.mjs",
+    "typecheck": "tsc --project backend/tsconfig.json --noEmit && npm --prefix frontend run build",
+    "typecheck:backend": "tsc --project backend/tsconfig.json --noEmit",
+    "test": "npm run test:node && npm run test:python",
+    "test:node": "node --import tsx --test tests/unit/*.test.mjs",
+    "test:python": "python3 services/ai-engine/tests/test_ai_engine.py && python3 services/ai-engine/tests/test_connectors.py",
     "lint": "npm --prefix frontend run lint",
     "preview": "npm --prefix frontend run preview"
   },
@@ -21,5 +24,14 @@
     "topic-modeling"
   ],
   "author": "MineSetu Engineering Team",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@vercel/node": "^20.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
 }

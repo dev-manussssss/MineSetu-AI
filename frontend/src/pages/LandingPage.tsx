@@ -1,215 +1,415 @@
 import React from 'react';
 import {
-  Layers,
   ArrowRight,
-  Shield,
   FileCheck,
-  Cloud,
-  MessageSquareText,
+  Search,
   FileText,
-  Lock,
-  GitBranch,
-  AlertTriangle,
-  Database,
-  Eye,
-  CheckCircle2,
-  Users
+  UploadCloud
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { DisclaimerBanner } from '../components/DisclaimerBanner';
+import type { Role } from '../types';
 
 export const LandingPage: React.FC = () => {
-  const { navigateTo } = useApp();
+  const { navigateTo, switchRole } = useApp();
+
+  const handleLaunchRole = (role: Role) => {
+    switchRole(role);
+    navigateTo('/dashboard');
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', color: 'var(--text-primary)' }}>
-      {/* Top Banner */}
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', color: 'var(--text-primary)', fontFamily: 'var(--font-family)' }}>
+      {/* 1. Prototype Disclaimer Banner at very top */}
       <DisclaimerBanner />
 
-      {/* 1. Header */}
-      <header style={{
-        borderBottom: '1px solid var(--border-subtle)',
-        padding: '16px 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50
-      }}>
+      {/* 2. Header / Navigation */}
+      <header
+        className="landing-header"
+        style={{
+          borderBottom: '1px solid var(--border-subtle)',
+          padding: '14px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: '#FFFFFF',
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+        }}
+      >
+        {/* Brand & Wordmark with Authentic Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            backgroundColor: 'var(--bg-dark)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Layers size={22} />
-          </div>
+          <img
+            src="/minesetu-logo.png"
+            alt="MineSetu AI Logo"
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '8px',
+              objectFit: 'contain'
+            }}
+          />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                MDMS + Mindsetu AI
+              <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                MineSetu <span style={{ color: 'var(--accent-primary)' }}>AI</span>
               </span>
-              <span className="badge badge-demo">PROTOTYPE</span>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                backgroundColor: 'var(--accent-light)',
+                color: 'var(--accent-primary)',
+                letterSpacing: '0.04em'
+              }}>
+                PROTOTYPE
+              </span>
             </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Intelligent Mining Data Management Layer Concept
-            </span>
+            <div className="landing-brand-subtitle" style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
+              AI-Assisted Coal-Sector Reporting Prototype
+            </div>
           </div>
         </div>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <a href="#modules" style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
-            SIH Modules
-          </a>
-          <a href="#workflow" style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
-            Workflow Pipeline
-          </a>
-          <a href="#rbac" style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
-            Role Access
-          </a>
-          <a href="#architecture" style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
-            Architecture
-          </a>
+        {/* Working Anchor Navigation */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <button
+              onClick={() => scrollToSection('how-it-works')}
+              style={{ background: 'none', border: 'none', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection('capabilities')}
+              style={{ background: 'none', border: 'none', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}
+            >
+              Capabilities
+            </button>
+            <button
+              onClick={() => scrollToSection('personas')}
+              style={{ background: 'none', border: 'none', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}
+            >
+              Demo Personas
+            </button>
+          </div>
           <button
             onClick={() => navigateTo('/login')}
-            className="btn btn-primary btn-pill"
-            style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 600 }}
+            className="btn btn-primary landing-cta-btn"
+            style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
-            <span>Enter AI-Enhanced MDMS</span>
+            <span>Explore Prototype</span>
             <ArrowRight size={14} />
           </button>
         </nav>
       </header>
 
-      {/* 2. Hero Section */}
+      {/* 3. Hero Section */}
       <section style={{
-        padding: '72px 24px 60px',
-        maxWidth: '1100px',
+        padding: '64px 24px 48px',
+        maxWidth: '1140px',
         margin: '0 auto',
         textAlign: 'center'
       }}>
+        {/* Prominent Context Tag */}
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          padding: '6px 16px',
+          padding: '6px 14px',
           borderRadius: 'var(--radius-full)',
           backgroundColor: 'var(--bg-surface-muted)',
-          border: '1px solid var(--border-subtle)',
+          border: '1px solid var(--border-medium)',
           fontSize: '12px',
-          fontWeight: 600,
           color: 'var(--text-secondary)',
           marginBottom: '24px'
         }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-          Smart India Hackathon (SIH) Prototype Demonstration
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)' }} />
+          <span>Standalone Demonstration Environment · Synthetic Coal-Sector Data</span>
         </div>
 
+        {/* Exact Approved Headline */}
         <h1 style={{
-          fontSize: '48px',
-          lineHeight: '1.15',
-          fontWeight: 800,
-          letterSpacing: '-0.03em',
-          color: '#0F172A',
-          marginBottom: '20px'
+          fontSize: '40px',
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          lineHeight: '1.2',
+          letterSpacing: '-0.025em',
+          maxWidth: '840px',
+          margin: '0 auto 20px'
         }}>
-          Intelligent Document Intelligence & <br />
-          <span style={{ color: 'var(--accent-primary)' }}>Source-Grounded Querying</span> for MDMS
+          Making coal-sector reporting simpler and more connected.
         </h1>
 
+        {/* Exact Approved Supporting Copy */}
         <p style={{
-          fontSize: '18px',
+          fontSize: '16px',
           lineHeight: '1.6',
           color: 'var(--text-secondary)',
-          maxWidth: '780px',
-          margin: '0 auto 36px'
+          maxWidth: '760px',
+          margin: '0 auto 32px'
         }}>
-          An AI-enabled extension layer bridging scanned physical coal returns, statutory logs, and multi-subsidiary records with automated extraction, human-in-the-loop validation, and grounded parliamentary reporting.
+          Explore how MineSetu AI could help teams process mining documents, enter information manually, verify records, search available information and prepare reports through a structured workflow.
         </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        {/* Hero CTAs */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
           <button
             onClick={() => navigateTo('/login')}
-            className="btn btn-primary btn-pill"
-            style={{ padding: '12px 28px', fontSize: '15px', fontWeight: 600 }}
+            className="btn btn-primary"
+            style={{ padding: '10px 24px', fontSize: '14px', fontWeight: 600, borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
           >
-            <span>Enter AI-Enhanced MDMS</span>
+            <span>Explore the prototype</span>
             <ArrowRight size={16} />
           </button>
-          <a
-            href="#architecture"
-            className="btn btn-outline btn-pill"
-            style={{ padding: '12px 24px', fontSize: '15px', fontWeight: 500 }}
+
+          <button
+            onClick={() => scrollToSection('how-it-works')}
+            className="btn btn-outline"
+            style={{ padding: '10px 22px', fontSize: '14px', fontWeight: 600, borderRadius: 'var(--radius-sm)' }}
           >
-            <span>View Architecture</span>
-          </a>
+            How it works
+          </button>
+        </div>
+
+        {/* Interactive Facsimile Preview Card */}
+        <div style={{
+          marginTop: '48px',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: '0 20px 40px -15px rgba(0,0,0,0.08)',
+          backgroundColor: '#FFFFFF',
+          overflow: 'hidden',
+          textAlign: 'left'
+        }}>
+          <div style={{
+            padding: '12px 20px',
+            backgroundColor: 'var(--bg-surface-muted)',
+            borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+              </div>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                minesetu-prototype / operational-dashboard.demo
+              </span>
+            </div>
+            <span className="badge badge-neutral">Simulated Interface</span>
+          </div>
+
+          <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', backgroundColor: '#FAFAFA' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                1. Dual Ingestion Pipeline
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                ECL Rajmahal OCP Monthly Return
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                Scanned PDF ingested with optical extraction alongside structured manual entries.
+              </p>
+            </div>
+
+            <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', backgroundColor: '#FAFAFA' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                2. Human Verification Step
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#D97706', marginBottom: '4px' }}>
+                Side-by-Side Validation
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                Engineers inspect field-level values against source facsimiles before finalizing.
+              </p>
+            </div>
+
+            <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', backgroundColor: '#FAFAFA' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                3. Grounded Synthesis
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#10B981', marginBottom: '4px' }}>
+                Source-Grounded Answering
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                Every metric cites verified document title, page, and table coordinates.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 3. Problem Statement & 4. AI Layer Section */}
-      <section style={{ backgroundColor: 'var(--bg-app)', padding: '60px 24px', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              The Operational Need
+      {/* 4. How It Works Section */}
+      <section id="how-it-works" style={{
+        padding: '64px 24px',
+        backgroundColor: 'var(--bg-app)',
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border-subtle)'
+      }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Four-Stage Structured Workflow
             </span>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px' }}>
-              Bridging Paper-Heavy Ingestion with Reliable Intelligence
+            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', letterSpacing: '-0.02em' }}>
+              How MineSetu AI Works
             </h2>
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', maxWidth: '640px', margin: '8px auto 0' }}>
+              A proposed structured workflow designed to preserve human verification and data integrity at every stage.
+            </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-            <div className="card-base">
-              <div style={{ color: '#DC2626', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <AlertTriangle size={20} />
-                <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Legacy Challenge</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+            {/* Step 1 */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-dark)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '14px',
+                marginBottom: '16px'
+              }}>
+                1
               </div>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-                Field returns, shift tallies, and colliery reports often arrive as non-standard PDFs or physical scans across 8 operating subsidiaries. Manual data entry introduces transcription errors, delayed aggregation, and slow response cycles for statutory queries.
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Add Information
+              </h3>
+              <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
+                Upload operational documents (PDF, DOCX, XLSX, scanned returns) or enter records directly through structured manual data entry with units.
               </p>
+              <div style={{ marginTop: '16px', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                Dual Ingestion Supported
+              </div>
             </div>
 
-            <div className="card-base" style={{ borderLeft: '3px solid var(--accent-primary)' }}>
-              <div style={{ color: 'var(--accent-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={20} />
-                <h3 style={{ fontSize: '16px', fontWeight: 700 }}>The AI Extension Layer</h3>
+            {/* Step 2 */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-dark)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '14px',
+                marginBottom: '16px'
+              }}>
+                2
               </div>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-                Mindsetu AI introduces high-precision OCR extraction, confidence scoring, and side-by-side human validation before data enters MDMS databases. Outputs remain strictly assistive and traceable to source documents.
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Review Extracted Data
+              </h3>
+              <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
+                Inspect extracted fields side-by-side with source facsimiles. Correct ambiguous values and record verification notes before continuing.
               </p>
+              <div style={{ marginTop: '16px', fontSize: '11px', color: '#D97706', fontWeight: 600 }}>
+                Human-in-the-Loop Validation
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-dark)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '14px',
+                marginBottom: '16px'
+              }}>
+                3
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Find Information
+              </h3>
+              <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
+                Ask questions over records available to your selected demo persona. Receive answers with clickable citations back to verified source returns.
+              </p>
+              <div style={{ marginTop: '16px', fontSize: '11px', color: '#10B981', fontWeight: 600 }}>
+                Source-Grounded Retrieval
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-dark)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '14px',
+                marginBottom: '16px'
+              }}>
+                4
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Prepare Reports
+              </h3>
+              <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
+                Compile verified records into structured draft reports with citations, visible data gap warnings, and multi-format exports.
+              </p>
+              <div style={{ marginTop: '16px', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                PDF, Word (.docx) & Excel (.xlsx)
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Three Core SIH Modules */}
-      <section id="modules" style={{ padding: '72px 24px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Core Problem Statement
+      {/* 5. Capability Cards */}
+      <section id="capabilities" style={{ padding: '64px 24px', maxWidth: '1140px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Prototype Capabilities
           </span>
-          <h2 style={{ fontSize: '30px', fontWeight: 700, marginTop: '6px' }}>
-            Three Mandated AI Modules
+          <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', letterSpacing: '-0.02em' }}>
+            Core Platform Modules
           </h2>
-          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-            Designed to integrate directly into executive and technical decision workflows.
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', maxWidth: '600px', margin: '8px auto 0' }}>
+            Designed for enterprise data density, auditability, and restrained executive interaction.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-          {/* Module 1 */}
-          <div className="card-base" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+          {/* Capability 1 */}
+          <div className="card-base" style={{ padding: '24px' }}>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
               backgroundColor: 'var(--accent-light)',
               color: 'var(--accent-primary)',
               display: 'flex',
@@ -217,219 +417,264 @@ export const LandingPage: React.FC = () => {
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
-              <FileText size={22} />
+              <UploadCloud size={20} />
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Module 1</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '6px 0 10px' }}>
-              Automated Report Generation
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Document Intelligence
             </h3>
-            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
-              Compiles multi-subsidiary operational returns, production statistics, and safety compliance records into formatted executive summaries with embedded source references and download options.
+            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
+              Simulates extraction from structured tabular mining returns, shift logs, and geological reports with field confidence indicators.
             </p>
-            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--accent-primary)', fontWeight: 600 }}>
-              <CheckCircle2 size={14} /> Structured data export with lineage
-            </div>
           </div>
 
-          {/* Module 2 */}
-          <div className="card-base" style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Capability 2 */}
+          <div className="card-base" style={{ padding: '24px' }}>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--pill-purple-bg)',
-              color: 'var(--pill-purple-text)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: '#FEF3C7',
+              color: '#D97706',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
-              <Cloud size={22} />
+              <FileCheck size={20} />
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Module 2</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '6px 0 10px' }}>
-              Topic Identification & Word Cloud
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Human Verification
             </h3>
-            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
-              Extracts key themes, recurring bottlenecks, and emergent concerns from unstructured daily remarks, accident investigation notes, and colliery inspection logs across all coalfields.
+            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
+              Enables field officers and technical authorities to review, correct, and certify parsed figures before records enter the analytics corpus.
             </p>
-            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--pill-purple-text)', fontWeight: 600 }}>
-              <CheckCircle2 size={14} /> Interactive SVG word cloud & clusters
-            </div>
           </div>
 
-          {/* Module 3 */}
-          <div className="card-base" style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Capability 3 */}
+          <div className="card-base" style={{ padding: '24px' }}>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--success-bg)',
-              color: 'var(--success-solid)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: '#ECFDF5',
+              color: '#10B981',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
-              <MessageSquareText size={22} />
+              <Search size={20} />
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Module 3</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '6px 0 10px' }}>
-              AI-Based Query & Response
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Intelligent Search
             </h3>
-            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
-              Source-grounded RAG engine capable of answering technical questions, parliamentary inquiries, and production cross-comparisons with mandatory citations and anti-hallucination guardrails.
+            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
+              Ask MineSetu performs grounded retrieval with mandatory citations, anti-hallucination guardrails, and explicit notification of missing data.
             </p>
-            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--success-text)', fontWeight: 600 }}>
-              <CheckCircle2 size={14} /> Zero unsupported claims; full page traceability
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Workflow Visual */}
-      <section id="workflow" style={{ backgroundColor: 'var(--bg-app)', padding: '64px 24px', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Traceable Pipeline
-            </span>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px' }}>
-              From Raw Scans to Approved Intelligence
-            </h2>
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
-            overflowX: 'auto',
-            padding: '16px 0'
-          }}>
-            {[
-              { step: '01', title: 'Upload & Hash', desc: 'Immutable PDF in storage', icon: <FileCheck size={18} /> },
-              { step: '02', title: 'OCR Extraction', desc: 'Key-value & tables parsed', icon: <Database size={18} /> },
-              { step: '03', title: 'Confidence Scoring', desc: 'Highlight low confidence', icon: <AlertTriangle size={18} /> },
-              { step: '04', title: 'Human Review', desc: 'Officer validation & edit', icon: <Eye size={18} /> },
-              { step: '05', title: 'MDMS Approved', desc: 'Published to core store', icon: <CheckCircle2 size={18} /> },
-              { step: '06', title: 'RAG & Reports', desc: 'Source-grounded query', icon: <MessageSquareText size={18} /> },
-            ].map((st) => (
-              <div key={st.step} style={{
-                flex: 1,
-                minWidth: '150px',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '16px',
-                textAlign: 'left'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-primary)' }}>{st.step}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{st.icon}</span>
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{st.title}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{st.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. RBAC Matrix Overview */}
-      <section id="rbac" style={{ padding: '64px 24px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Authority & Governance
-          </span>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px' }}>
-            7 Tailored Prototype Personas
-          </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '6px' }}>
-            Every role receives an isolated data scope, tailored sidebar navigation, and strict permissions.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          {[
-            { role: 'Ministry Executive', scope: 'National Macro View', desc: 'Strategic analytics, parliamentary Q&A approval' },
-            { role: 'CIL Executive', scope: 'Enterprise CIL Scope', desc: 'Subsidiary benchmarking, production tracking' },
-            { role: 'CMPDI Nodal Expert', scope: 'Technical Repository', desc: 'Ingestion queue, OCR verification, reports' },
-            { role: 'Subsidiary Manager', scope: 'Single Subsidiary', desc: 'Mine validation, area approvals, local reports' },
-            { role: 'Parliamentary Desk', scope: 'Lok / Rajya Sabha', desc: 'Grounded draft generation, citation auditing' },
-            { role: 'Field Data Officer', scope: 'Single Colliery', desc: 'Daily log uploads, OCR error correction' },
-            { role: 'System Admin', scope: 'Global Infrastructure', desc: 'User RBAC, system health, audit log viewer' },
-          ].map((r, i) => (
-            <div key={i} style={{
-              backgroundColor: '#FFFFFF',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              padding: '16px'
+          {/* Capability 4 */}
+          <div className="card-base" style={{ padding: '24px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: '#EFF6FF',
+              color: '#2563EB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <Users size={14} style={{ color: 'var(--accent-primary)' }} />
-                <span style={{ fontSize: '13px', fontWeight: 700 }}>{r.role}</span>
-              </div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>{r.scope}</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>{r.desc}</div>
+              <FileText size={20} />
             </div>
-          ))}
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Report Preparation
+            </h3>
+            <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
+              Assemble multi-subsidiary figures into structured executive drafts with export controls for PDF, Word (.docx), and Excel (.xlsx).
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* 8. Architecture & Security Section */}
-      <section id="architecture" style={{ backgroundColor: 'var(--bg-dark)', color: '#FFFFFF', padding: '64px 24px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#60A5FA', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Security & Trust Boundaries
+      {/* 6. Proposed Workflow / Demo Personas */}
+      <section id="personas" style={{
+        padding: '64px 24px',
+        backgroundColor: 'var(--bg-app)',
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border-subtle)'
+      }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Role-Based Demonstration
             </span>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px' }}>
-              Zero Secret Leakage & Server-Side Grounding
+            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', letterSpacing: '-0.02em' }}>
+              Explore Proposed Workspaces
             </h2>
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', maxWidth: '680px', margin: '8px auto 0' }}>
+              These are demo personas used to explore a proposed workflow, not a declaration of verified official system permissions.
+            </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-            <div style={{ backgroundColor: 'var(--bg-dark-surface)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#60A5FA', marginBottom: '12px' }}>
-                <Lock size={20} />
-                <span style={{ fontSize: '16px', fontWeight: 700 }}>Client Security Isolation</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
+            {/* Persona 1: Ministry of Coal */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="badge badge-neutral">Persona 1</span>
+                <span className="badge badge-neutral">Demo</span>
               </div>
-              <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#CBD5E1' }}>
-                Grok / xAI API keys and Supabase service-role credentials reside strictly within serverless Edge Functions. No private secret is ever bundled into client-side JavaScript.
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Ministry of Coal
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
+                Cross-organization visibility, issuing information requests, reviewing subsidiary responses, and preparing executive drafts.
               </p>
+              <button
+                onClick={() => handleLaunchRole('ministry_coal')}
+                className="btn btn-outline"
+                style={{ width: '100%', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
+              >
+                Launch Ministry Workspace →
+              </button>
             </div>
 
-            <div style={{ backgroundColor: 'var(--bg-dark-surface)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34D399', marginBottom: '12px' }}>
-                <GitBranch size={20} />
-                <span style={{ fontSize: '16px', fontWeight: 700 }}>Immutable Source Lineage</span>
+            {/* Persona 2: CIL Headquarters */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="badge badge-neutral">Persona 2</span>
+                <span className="badge badge-neutral">Demo</span>
               </div>
-              <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#CBD5E1' }}>
-                Original scanned files remain immutable in secure storage. All extractions, manual overrides, and approvals are stored in relational audit logs with before/after diffs.
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                CIL Headquarters
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
+                Subsidiary-level information follow-up, multi-mine consolidation, comparison against baselines, and organization reporting.
               </p>
+              <button
+                onClick={() => handleLaunchRole('cil_hq')}
+                className="btn btn-outline"
+                style={{ width: '100%', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
+              >
+                Launch CIL HQ Workspace →
+              </button>
+            </div>
+
+            {/* Persona 3: CMPDI */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="badge badge-neutral">Persona 3</span>
+                <span className="badge badge-neutral">Demo</span>
+              </div>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                CMPDI
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
+                Technical record review, evidence inspection in validation workbench, discrepancy clarification, and technical reports.
+              </p>
+              <button
+                onClick={() => handleLaunchRole('cmpdi')}
+                className="btn btn-outline"
+                style={{ width: '100%', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
+              >
+                Launch CMPDI Workspace →
+              </button>
+            </div>
+
+            {/* Persona 4: Subsidiary / Mine Officer */}
+            <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="badge badge-neutral">Persona 4</span>
+                <span className="badge badge-neutral">Demo</span>
+              </div>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Subsidiary / Mine Officer
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
+                Upload colliery documents, enter manual production records, answer requests from headquarters, and correct returned items.
+              </p>
+              <button
+                onClick={() => handleLaunchRole('subsidiary_officer')}
+                className="btn btn-outline"
+                style={{ width: '100%', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
+              >
+                Launch Subsidiary Workspace →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Footer */}
+      <footer style={{
+        padding: '40px 32px 32px',
+        backgroundColor: '#FFFFFF',
+        borderTop: '1px solid var(--border-subtle)',
+        fontSize: '12px',
+        color: 'var(--text-secondary)'
+      }}>
+        <div style={{
+          maxWidth: '1140px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px',
+          paddingBottom: '24px',
+          borderBottom: '1px solid var(--border-subtle)'
+        }}>
+          {/* Logo Wordmark */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/minesetu-logo.png"
+              alt="MineSetu AI Logo"
+              style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'contain' }}
+            />
+            <div>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
+                MineSetu AI
+              </span>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                AI-assisted reporting and document workflow prototype for the coal sector.
+              </div>
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          {/* Navigation Links */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <button
+              onClick={() => scrollToSection('how-it-works')}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px' }}
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection('capabilities')}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px' }}
+            >
+              Capabilities
+            </button>
+            <button
+              onClick={() => scrollToSection('personas')}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px' }}
+            >
+              Demo Personas
+            </button>
             <button
               onClick={() => navigateTo('/login')}
-              className="btn btn-primary btn-pill"
-              style={{ padding: '12px 32px', fontSize: '15px', fontWeight: 600 }}
+              style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
             >
-              <span>Launch Demo Environment</span>
-              <ArrowRight size={16} />
+              Open Prototype →
             </button>
           </div>
         </div>
-      </section>
 
-      {/* 9. Institutional Disclaimer & Footer */}
-      <footer style={{ borderTop: '1px solid var(--border-subtle)', padding: '36px 24px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', backgroundColor: '#FFFFFF' }}>
-        <p style={{ maxWidth: '800px', margin: '0 auto 12px', lineHeight: '1.6' }}>
-          <strong>Prototype Disclaimer:</strong> This application is a technical demonstration developed to showcase assistive AI capabilities within mining data management workflows. It is not an official system of the Government of India, Ministry of Coal, CMPDI, CIL, or NIC. All records displayed are synthetic demo data.
-        </p>
-        <p>© 2026 MDMS + Mindsetu AI Architecture Prototype. Built for SIH Demonstration.</p>
+        {/* Legal / Prototype Truthfulness Notice */}
+        <div style={{ maxWidth: '1140px', margin: '20px auto 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', lineHeight: '1.6' }}>
+          MineSetu AI demonstrates a proposed AI-powered extension to the MDMS reporting workflow. This is a standalone prototype, not the official MDMS portal, and live integration is not currently claimed. All figures and documents shown are synthetic demo records.
+        </div>
       </footer>
     </div>
   );

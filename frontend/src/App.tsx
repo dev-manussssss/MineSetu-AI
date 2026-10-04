@@ -9,8 +9,9 @@ import { ComparePage } from './pages/ComparePage';
 import { TopicsPage } from './pages/TopicsPage';
 import { QueryPage } from './pages/QueryPage';
 import { ReportsPage } from './pages/ReportsPage';
-import { ParliamentaryDeskPage } from './pages/ParliamentaryDeskPage';
+import { RequestsPage } from './pages/RequestsPage';
 import { AdminPage } from './pages/AdminPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { can } from './lib/rbac';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
@@ -33,15 +34,36 @@ const RouteDispatcher: React.FC = () => {
     switch (currentRoute) {
       case '/dashboard':
         return (
-          <DashboardLayout pageTitle="Operational Overview" pageSubtitle="Real-time multi-subsidiary monitoring and extraction tracking">
+          <DashboardLayout
+            pageTitle="Operational Dashboard"
+            pageSubtitle="Multi-subsidiary tracking, extraction queue, and executive briefing"
+          >
             <DashboardPage />
           </DashboardLayout>
         );
 
-      case '/documents':
-        if (!can(currentUser, 'documents.view')) return <AccessDenied route="Documents" />;
+      case '/ask':
+      case '/query':
+        if (!can(currentUser, 'queries.execute')) return <AccessDenied route="Ask MineSetu" />;
         return (
-          <DashboardLayout pageTitle="Document Ingestion & Archive" pageSubtitle="Digital archive and optical recognition queue">
+          <DashboardLayout
+            pageTitle="Ask MineSetu"
+            pageSubtitle="Source-grounded inquiry assistant with mandatory evidence citations"
+          >
+            <QueryPage />
+          </DashboardLayout>
+        );
+
+      case '/documents':
+      case '/documents/manual':
+        if (!can(currentUser, 'documents.view') && !can(currentUser, 'manual.entry')) {
+          return <AccessDenied route="Documents" />;
+        }
+        return (
+          <DashboardLayout
+            pageTitle="Documents & Ingestion"
+            pageSubtitle="Dual ingestion pipeline: Scanned PDF upload and first-class manual data entry"
+          >
             <DocumentsPage />
           </DashboardLayout>
         );
@@ -51,62 +73,77 @@ const RouteDispatcher: React.FC = () => {
           return <AccessDenied route="Validation Workbench" />;
         }
         return (
-          <DashboardLayout pageTitle="Extraction & Validation Workbench" pageSubtitle="Human-in-the-loop verification of parsed operational records">
+          <DashboardLayout
+            pageTitle="Validation Workbench"
+            pageSubtitle="Human-in-the-loop verification of parsed figures against source facsimiles"
+          >
             <ValidationWorkbenchPage />
           </DashboardLayout>
         );
 
-      case '/compare':
-        if (!can(currentUser, 'documents.approve') && !can(currentUser, 'documents.view')) {
-          return <AccessDenied route="Document Compare" />;
-        }
+      case '/requests':
+      case '/parliamentary':
         return (
-          <DashboardLayout pageTitle="Document & Baseline Compare" pageSubtitle="Evaluate field-level variances against historical baselines">
+          <DashboardLayout
+            pageTitle="Information Requests"
+            pageSubtitle="Cross-organisation requests, subsidiary responses, and clarification threads"
+          >
+            <RequestsPage />
+          </DashboardLayout>
+        );
+
+      case '/review':
+      case '/compare':
+        return (
+          <DashboardLayout
+            pageTitle="Review Queue & Variance"
+            pageSubtitle="Multi-stage submission review and baseline comparison"
+          >
             <ComparePage />
           </DashboardLayout>
         );
 
-      case '/topics':
-        if (!can(currentUser, 'topic.analyze')) return <AccessDenied route="Topic Intelligence" />;
-        return (
-          <DashboardLayout pageTitle="Topic Intelligence & Word Cloud" pageSubtitle="Semantic cluster analysis of operational remarks and logs">
-            <TopicsPage />
-          </DashboardLayout>
-        );
-
-      case '/query':
-        if (!can(currentUser, 'queries.execute')) return <AccessDenied route="AI Query" />;
-        return (
-          <DashboardLayout pageTitle="Grounded AI Query (RAG)" pageSubtitle="Multi-subsidiary question answering strictly grounded in verified sources">
-            <QueryPage />
-          </DashboardLayout>
-        );
-
       case '/reports':
-        if (!can(currentUser, 'reports.generate')) return <AccessDenied route="Automated Reports" />;
+        if (!can(currentUser, 'reports.generate')) return <AccessDenied route="Reports" />;
         return (
-          <DashboardLayout pageTitle="Automated Report Builder" pageSubtitle="Compile verified operational returns into executive briefs with citations">
+          <DashboardLayout
+            pageTitle="Automated Report Builder"
+            pageSubtitle="Compile verified operational returns into executive briefs with citations"
+          >
             <ReportsPage />
           </DashboardLayout>
         );
 
-      case '/parliamentary':
-        if (!can(currentUser, 'parliamentary.draft') && !can(currentUser, 'parliamentary.approve')) {
-          return <AccessDenied route="Parliamentary Desk" />;
-        }
+      case '/topics':
+        if (!can(currentUser, 'topic.analyze')) return <AccessDenied route="Topics & Word Cloud" />;
         return (
-          <DashboardLayout pageTitle="Parliamentary Response Desk" pageSubtitle="Drafting and ministerial review for legislative questions">
-            <ParliamentaryDeskPage />
+          <DashboardLayout
+            pageTitle="Topics & Word Cloud"
+            pageSubtitle="Semantic analysis and recurring operational themes across returns"
+          >
+            <TopicsPage />
           </DashboardLayout>
         );
 
+      case '/activity':
       case '/admin':
-        if (!can(currentUser, 'admin.users') && !can(currentUser, 'audit.view')) {
-          return <AccessDenied route="System Administration" />;
-        }
+        if (!can(currentUser, 'audit.view')) return <AccessDenied route="Activity History" />;
         return (
-          <DashboardLayout pageTitle="System Administration & Audit" pageSubtitle="Audit trails, RBAC permissions, and AI gateway monitoring">
+          <DashboardLayout
+            pageTitle="Activity History"
+            pageSubtitle="Session activity event ledger and role permissions reference"
+          >
             <AdminPage />
+          </DashboardLayout>
+        );
+
+      case '/settings':
+        return (
+          <DashboardLayout
+            pageTitle="Settings & Preferences"
+            pageSubtitle="Demonstration persona management and local dataset controls"
+          >
+            <SettingsPage />
           </DashboardLayout>
         );
 
@@ -133,7 +170,7 @@ const AccessDenied: React.FC<{ route: string }> = ({ route }) => {
           Access Restricted: {route}
         </h2>
         <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Your current persona (<strong>{currentUser.roleLabel}</strong>) does not have authorization to view this module. In accordance with MDMS RBAC policies, this action has been logged in the audit trail.
+          Your current persona (<strong>{currentUser.roleLabel}</strong>) does not have authorization to view this module. In accordance with MDMS RBAC policies, this action has been recorded in the session activity history.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
           <button

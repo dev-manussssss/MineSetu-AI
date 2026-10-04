@@ -24,7 +24,7 @@ This document tracks all development skills utilized across the project lifecycl
 - **Purpose**: Structure the multi-phase implementation roadmap from contract documentation through functional modules to deployment readiness.
 - **Trigger**: User prompt "proceed with the implementation plan".
 - **Phase**: Phases 0 through 8.
-- **Inputs**: `guidelines.md`, SIH problem statement, visual references (`deisgn reference/ref1.png`, `ref2.png`).
+- **Inputs**: `guidelines.md`, SIH problem statement, visual references (`assets/design-references/ref1.png`, `ref2.png`).
 - **Outputs Delivered**: Master implementation plan, `docs/progress.md`, and definition of done checklist across all 3 SIH modules.
 - **Validation**: All 9 phases delivered functional, tested, documented code without skipping requirements.
 

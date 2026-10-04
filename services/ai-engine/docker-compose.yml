@@ -1,0 +1,19 @@
+services:
+  ai-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minesetu-ai-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - GROK_API_KEY_PRIMARY=${GROK_API_KEY_PRIMARY}
+      - WORKER_ENABLED=true
+    restart: unless-stopped
+    volumes:
+      - ./exports:/app/exports
+      - ./facsimiles:/app/facsimiles

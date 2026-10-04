@@ -1,36 +1,73 @@
-# MDMS + Mindsetu AI
+# MineSetu AI — Coal-Sector Reporting Workspace Prototype
 
-> **PROTOTYPE DEMONSTRATION DISCLAIMER**:
-> This repository is a technical prototype and concept demonstration of an AI-enabled extension layer around existing Mine Data Management System (MDMS) workflows. It is **not** an official Government of India, Ministry of Coal, CMPDI, CIL, NIC, or MDMS production system. All operational numbers and figures depicted in demo modes are synthetic records created for research and interface demonstration purposes.
+> **PROTOTYPE DEMONSTRATION & CONCEPT DISCLAIMER**:  
+> MineSetu AI demonstrates a proposed AI-powered extension to the Mine Data Management System (MDMS) reporting workflow. This is a **standalone prototype and concept demonstration**, not the official MDMS portal. It does not claim a live MDMS connection, official government authentication, official approval, government endorsement, live government data, or an established API. All operational figures and returns displayed in demonstration modes are synthetic records (`is_demo: true`) created for workflow simulation.
 
 ---
 
-## 1. Project Purpose
+## 1. Product Definition & Purpose
 
-In traditional mining management, daily operational returns, statutory reports, and production logs often arrive as scanned paper forms or unstructured PDFs across multiple coalfield subsidiaries. MDMS + Mindsetu AI demonstrates how modern assistive intelligence can be inserted into the existing lifecycle:
+In traditional coalfield operations, daily production returns, overburden logs, and statutory inspection reports arrive as scanned paper forms or multi-page PDFs across multiple Coal India Limited (CIL) subsidiaries. 
+
+**MineSetu AI** (*"Setu"* meaning *Bridge*) explores an assistive software layer that connects physical returns, structured field data contributions, human verification, and executive reporting:
 
 ```text
-Scanned Document → OCR / Extraction → Automated Validation → Human Review → Approved Data → AI Query / Analytics / Reports
+Field Document / Manual Entry ──> Extraction & OCR ──> Human Verification ──> Review Queue ──> Grounded Search & Multi-Format Reports
 ```
 
-### Three Core SIH Modules
-1. **Automated Report Generation**: Rapid compilation of subsidiary/mine operational reviews with verified source citations.
-2. **Topic Identification & Word Cloud**: Semantic clustering and visualization of unstructured remarks, inspection notes, and shift logs.
-3. **AI-Based Query & Response (Grounded RAG)**: Natural language question answering strictly grounded in verified source documents with interactive source inspection.
+### The Three Core AI Modules
+1. **Automated Report Generation**: Rapid compilation of operational returns into executive briefs with verified citations, exported simultaneously to **PDF**, **Microsoft Word (.docx)**, and **Microsoft Excel (.xlsx)**.
+2. **Word Cloud & Topic Identification**: Semantic clustering across colliery remarks, inspection notes, and shift diaries to highlight operational friction and safety trends.
+3. **AI-Based Query & Response ("Ask MineSetu")**: Strictly source-grounded natural language search with anti-hallucination guardrails and explicit document citations.
 
 ---
 
-## 2. Architecture Summary
+## 2. Documentation as Source of Truth
 
-The prototype features a modular architecture:
-- **Frontend**: React 19 / Vite + TypeScript with a custom tokenized Vanilla CSS design system modeled on institutional SaaS benchmarks (`deisgn reference/ref1.png`, `ref2.png`).
-- **Authorization & RBAC**: Centralized `can(user, permission)` permission model supporting 7 distinct prototype roles (Ministry Exec, CIL Exec, CMPDI Nodal, Subsidiary Manager, Parliamentary Query Cell, Field Officer, System Administrator).
-- **Backend / Storage**: Supabase PostgreSQL schemas, Row-Level Security, immutable file storage, and append-only audit logging.
-- **AI Gateway**: Grok 2 / xAI integration with primary/fallback API key rotation and offline synthetic grounding.
+The canonical specifications for MineSetu AI are maintained in the `docs/` hierarchy. **Start by reading the Master Guidelines**:
+
+👉 **[Master Engineering Guidelines (`docs/guidelines.md`)](docs/guidelines.md)** 👈
+
+### Canonical Roadmap & Living Dashboards
+- 🌟 **[Interactive Visual Dashboard (`docs/IMPLEMENTATION_DASHBOARD.html`)](docs/IMPLEMENTATION_DASHBOARD.html)** — Circular progress tracker, phase walkthroughs, test console, and 27-portal matrix (Open in browser).
+- 📋 **[Master Implementation Plan 4 (`docs/IMPLEMENTATION_PLAN_4_FINAL.md`)](docs/IMPLEMENTATION_PLAN_4_FINAL.md)** — Canonical 6-phase master architecture roadmap.
+- 📊 **[Implementation Status Dashboard (`docs/IMPLEMENTATION_STATUS.md`)](docs/IMPLEMENTATION_STATUS.md)** — Living markdown status tracker (96.0% verified completion).
+- 📜 **[Chronological Activity Log (`docs/IMPLEMENTATION_LOG.md`)](docs/IMPLEMENTATION_LOG.md)** — Test logs, audit trails, and execution evidence.
+
+### Complete Documentation Index
+- **Strategy & Governance**:
+  - [Project Overview & Problem Statement](docs/project-overview.md)
+  - [Role-Based Access Control & Personas](docs/role-permissions.md)
+  - [Architecture Decision Records (Decisions Log)](docs/decisions-log.md)
+- **Architecture & Specifications**:
+  - [System Architecture Specification](docs/architecture.md)
+  - [Frontend Page Blueprint & Specification](docs/frontend-page-specification.md)
+  - [Frontend Design System & Tokens](docs/frontend-design-system.md)
+  - [State Transitions & Operational Workflows](docs/workflows.md)
+  - [Data Model & Relational Schema](docs/data-model.md)
+  - [REST API Contracts & Endpoints](docs/api-contracts.md)
+  - [AI Pipeline & Document Processing Engine](docs/ai-and-document-processing.md)
+- **Security & Quality**:
+  - [Security, Privacy & Secret Management](docs/security-and-secrets.md)
+  - [Testing Strategy & Acceptance Criteria](docs/testing-and-acceptance.md)
+  - [Vercel Deployment Guide](docs/vercel-deployment.md)
+  - [Implementation Status & Repository Audit](docs/implementation-status.md)
+- **Historical Archive**:
+  - [Preserved Legacy Documentation Archive](docs/archive/legacy-docs/README.md)
 
 ---
 
-## 3. Local Setup & Quickstart
+## 3. Four Target Prototype Personas
+
+The prototype models four operational roles:
+1. **Ministry of Coal** (`ministry_coal`): High-level cross-subsidiary governance, parliamentary briefings, and national production monitoring.
+2. **CIL Headquarters** (`cil_hq`): Enterprise subsidiary operational consolidation, target vs actual tracking, and variance reconciliation.
+3. **CMPDI** (`cmpdi`): Technical & geological oversight, OCR extraction verification, and exploratory topic intelligence.
+4. **Subsidiary / Mine Officer** (`subsidiary_officer`): Primary colliery returns, first-class manual data entry, and field error corrections.
+
+---
+
+## 4. Local Quickstart & Development
 
 ### Prerequisites
 - Node.js 20.x or 22+
@@ -42,18 +79,39 @@ The prototype features a modular architecture:
 git clone <repo-url>
 cd MineSetu
 
-# Install dependencies
-npm install
+# Install frontend dependencies
+npm --prefix frontend install
 
-# Start local development server
+# Start local Vite development server
 npm run dev
+# (or: ./start.sh)
 ```
 
 Visit `http://localhost:5173` to explore the institutional landing page and demo logins.
 
 ---
 
-## 4. Environment Variables
+## 5. Automated Testing & Verification
+
+The repository includes automated unit tests verifying RBAC permission boundaries and anti-hallucination guardrails:
+
+```bash
+# Execute unit tests (Node.js native test runner)
+npm test
+
+# Run TypeScript compilation check
+npm run typecheck
+
+# Build production bundle
+npm run build
+
+# Run linter
+npm run lint
+```
+
+---
+
+## 6. Environment Configuration
 
 Copy `.env.example` to `.env.local`:
 ```bash
@@ -61,52 +119,22 @@ cp .env.example .env.local
 ```
 
 Configurable variables:
-- `VITE_SUPABASE_URL`: Supabase project URL (client-safe)
-- `VITE_SUPABASE_ANON_KEY`: Supabase anon API key (client-safe)
-- `SUPABASE_SERVICE_ROLE_KEY`: Server-side service key (never exposed to client)
-- `GROK_API_KEY_PRIMARY`: Primary xAI Grok API key (server-side only)
-- `GROK_API_KEY_FALLBACK`: Backup xAI Grok API key (server-side only)
+- `VITE_APP_ENV`: `development` | `production`
 - `VITE_APP_DEMO_MODE`: `true` (enables synthetic fallback data)
+- `VITE_SUPABASE_URL`: Public Supabase URL (client-safe)
+- `VITE_SUPABASE_ANON_KEY`: Public anonymous API key (client-safe)
+- `SUPABASE_SERVICE_ROLE_KEY`: Server-side service key (**never exposed to browser**)
+- `GROK_API_KEY_PRIMARY`: Primary xAI Grok inference key (**server-side only**)
+- `GROK_API_KEY_FALLBACK`: Secondary xAI Grok key for failover (**server-side only**)
 
 ---
 
-## 5. Demo Personas & Login
+## 7. Vercel Deployment Summary
 
-The `/login` screen provides one-click instant authentication for 7 prototype roles:
+MineSetu AI is configured for seamless deployment on **Vercel**:
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build` (or `npm --prefix frontend run build`)
+- **Output Directory**: `dist` (or `frontend/dist`)
+- **SPA Rewrites**: Managed via root and frontend `vercel.json` rewrites to `/index.html`.
 
-1. **Ministry Executive**: `ministry.exec@demo.coal.gov.in`
-2. **CIL Executive Management**: `cil.director@demo.coalindia.in`
-3. **CMPDI Nodal Expert**: `cmpdi.nodal@demo.cmpdi.co.in`
-4. **Subsidiary Manager (ECL)**: `ecl.gm@demo.ecl.gov.in`
-5. **Parliamentary Query Cell**: `parliament.cell@demo.coal.gov.in`
-6. **Field / Mine Data Officer**: `rajmahal.officer@demo.ecl.gov.in`
-7. **System Administrator**: `sysadmin@demo.cmpdi.co.in`
-
-Every demo account operates in isolated data scopes and is watermarked with `DEMO ACCOUNT — SYNTHETIC DATA`.
-
----
-
-## 6. Testing & Quality Verification
-
-```bash
-# Run unit and integration tests
-npm run test
-
-# Run TypeScript type check
-npm run typecheck
-
-# Build production bundle
-npm run build
-```
-
----
-
-## 7. Deployment Summary
-
-The application is optimized for deployment on **Vercel**:
-- Framework Preset: Vite
-- Build Command: `npm run build`
-- Output Directory: `dist`
-- SPA Routing: Handled via `vercel.json` rewrites
-
-Refer to `vercel-deployment.md` for complete environment configuration.
+Consult [Vercel Deployment Guide (`docs/vercel-deployment.md`)](docs/vercel-deployment.md) for complete details on serverless execution timeouts and object storage integration.

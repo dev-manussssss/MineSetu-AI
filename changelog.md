@@ -1,43 +1,43 @@
-# Changelog — MDMS + Mindsetu AI
+# Changelog — MineSetu AI
 
-All notable changes and architectural decisions for this project are documented here in accordance with Section 3 of `guidelines.md`.
+All notable changes and architectural decisions for this project are documented here in accordance with `docs/guidelines.md`.
 
-## [1.0.0] - Core Implementation Complete (2026-09-30)
+## [1.1.0] - Repository Audit, Documentation Reset & Architecture Alignment (2026-10-04)
 
 ### Added
-- **Core Contract Documentation Suite (Phase 0)**:
-  - `docs/skills-map.md`: Active tracking for `@writing-plans`, `@frontend-design`, `@backend-dev-guidelines`, `@api-design`, `@systematic-debugging`, `@git-advanced-workflows`.
-  - `docs/progress.md`: Phase status tracking, checklists, and verification records.
-  - `brain.md`: Persistent engineering memory and architectural decision ledger.
-  - `architecture.md`: High-level architecture, boundaries, trust zones, and data pipelines.
-  - `design.md`: Design tokens, typography, radii, spacing, matching visual references (`ref1.png`, `ref2.png`).
-  - `rbac.md`: 7 prototype roles, permission registry, route access matrix, and data scopes.
-  - `database.md`: PostgreSQL / Supabase schemas for documents, extractions, queries, and audit logs.
-  - `api.md`: API endpoints, schemas, authorization requirements, and error envelope formatting.
-  - `ai-pipeline.md`: Ingestion, OCR, validation, 3 core SIH modules, and Grok API fallback.
-  - `security.md`: Threat model, secret isolation, and least-privilege access rules.
-  - `mock-dataset.md`: Synthetic CIL subsidiary dataset and seed/reset policies.
-  - `testing.md`: Testing hierarchy covering unit, integration, RBAC, UI, and responsive testing.
-  - `vercel-deployment.md`: Build settings, environment variable bindings, and Vercel configuration.
-  - `README.md`, `.env.example`, `.gitignore`, `vercel.json`.
+- **Canonical Master Documentation Suite (`docs/`)**:
+  - `docs/guidelines.md`: Master engineering guidelines, source-of-truth hierarchy, terminology definitions, UI copy/accessibility, and non-negotiable legal disclaimers.
+  - `docs/project-overview.md`: Problem statement, proposed MDMS relationship (extension concept, not replacement), 4 target personas, and 3 core AI modules.
+  - `docs/architecture.md`: Starting audit snapshot, target logical architecture, component boundaries, route structure, Mermaid flows, and Vercel execution constraints.
+  - `docs/role-permissions.md`: Deep specification of the 4 approved personas (Ministry of Coal, CIL HQ, CMPDI, Subsidiary / Mine Officer), data scopes, and legacy 7-role mapping.
+  - `docs/frontend-design-system.md`: Official brand asset paths (`file_00000000e9e88208ae070777ee045cb1.png`, `ref1.png`, `ref2.png`), exact token hex values, and component standards.
+  - `docs/frontend-page-specification.md`: Implementable blueprint covering Landing, Split-Screen Login, 4 Dashboards, Dual Ingestion (Upload + Manual Entry), Validation Workbench, Ask MineSetu, Reports, and complete button/control specification table.
+  - `docs/workflows.md`: Finite state machine state transitions for upload, OCR extraction, manual data entry, human verification, requests, review queue, and multi-format reports.
+  - `docs/ai-and-document-processing.md`: Ingestion pipeline, supported formats, deterministic calculations, strict prompt boundaries, anti-hallucination guardrails, and Grok 2 gateway.
+  - `docs/api-contracts.md`: Actual repository API inventory (confirming zero existing server routes) and comprehensive proposed REST endpoints with schemas and error envelopes.
+  - `docs/data-model.md`: Implementation-neutral entity relationship model, multi-tenant scoping, and Mermaid ER diagram separating client mock state from proposed backend schema.
+  - `docs/security-and-secrets.md`: Zero-client-secret policy, server-side secret isolation, multi-tenant IDOR prevention, upload validation, and PII scrubbing.
+  - `docs/vercel-deployment.md`: Detected Vite/React 19 stack, verified build commands, serverless limits (10s timeout, 4.5MB payload, ephemeral storage), and deployment verification steps.
+  - `docs/testing-and-acceptance.md`: Verification of existing 5 unit tests, plus comprehensive acceptance criteria matrix for all modules.
+  - `docs/implementation-status.md`: Detailed audit snapshot, verified test/build commands, asset paths, identified code/specification conflicts, and phased implementation roadmap.
+  - `docs/decisions-log.md`: Formal Architecture Decision Records (ADRs) cataloging 11 approved decisions and 8 open technical choices.
+- **Historical Documentation Archive**:
+  - Moved legacy documentation files (`docs/architecture/`, `docs/design-system/`, `docs/operations/`, `docs/reference-data/`) to `docs/archive/legacy-docs/` with an explanatory `README.md` to prevent multiple contradictory sources of truth.
 
-- **Frontend Application Scaffolding & Design System (Phase 1 & 2)**:
-  - React 19 / Vite + TypeScript application in `frontend/`.
-  - Tokenized Vanilla CSS design system (`tokens.css`, `index.css`) matching `ref1.png` and `ref2.png` (pill tabs, pill search input, 18px radii, 4-column metric grid).
-  - Centralized RBAC evaluator `can(user, permission)` and `getNavigationForRole(user)` supporting all 7 prototype personas.
-  - Institutional `LandingPage` adhering strictly to Section 6 and Section 1.4.
-  - `LoginPage` with one-click demo persona authentication and `DEMO ACCOUNT — SYNTHETIC DATA` watermark.
-  - `DashboardLayout`, `Sidebar`, `TopHeader`, and `DisclaimerBanner` components.
+### Changed
+- **Root `README.md`**: Rewritten as an authoritative entry point reflecting the approved product direction, linking `docs/guidelines.md` first, providing the complete documentation index, and documenting verified build/test commands.
+- **Documentation Source of Truth**: Replaced fragmented and contradictory documentation notes with an explicit epistemic hierarchy distinguishing verified facts from proposals and mocks.
 
-- **The Three Core SIH Modules (Phases 3, 4, 5, 6)**:
-  - **Module 1**: `DocumentsPage` ingestion queue, upload modal, and `ValidationWorkbenchPage` human-in-the-loop verification with split facsimile and audit logging.
-  - **Module 1 (Comparison)**: `ComparePage` with neutral "Difference detected" variance terminology.
-  - **Module 2**: `TopicsPage` with interactive SVG Word Cloud, cluster inspection, and cross-subsidiary mention frequencies.
-  - **Module 3**: `QueryPage` with source-grounded RAG, document/page citations, and anti-hallucination guardrail ("Insufficient source evidence").
-  - **Module 1 (Reporting)**: `ReportsPage` automated report builder with subsidiary/mine filters, executive narrative, verified tables, and PDF print export.
-  - **Parliamentary Desk**: `ParliamentaryDeskPage` supporting intake, AI draft, reviewed draft, and executive sign-off workflows.
+### Preserved
+- **Application Code & Working Builds**: Preserved existing working frontend code, package manifests, and test suites in a safe, 100% buildable state without broad application rewriting during this documentation-first deliverable (`npm test` and `npm --prefix frontend run build` verified passing).
 
-- **Administration, Audit & QA (Phases 7 & 8)**:
-  - `AdminPage` with searchable audit event ledger, RBAC permissions matrix inspector, and service health monitors.
-  - Automated unit test suite (`tests/rbac.test.mjs`) verified with Node test runner (5/5 tests passing).
-  - Production build verification (`npm run build`) passing with zero diagnostics.
+---
+
+## [1.0.0] - Initial Prototype Scaffolding (2026-09-30)
+
+### Added
+- **Frontend Scaffolding**: React 19 / Vite + TypeScript client-side SPA with Lucide React iconography.
+- **Client Design System**: Initial Vanilla CSS token styling (`tokens.css`, `index.css`).
+- **Client-Side Prototype RBAC**: Preliminary 7-role permission evaluator and mock navigation.
+- **Client Pages**: Prototype pages for landing, login, dashboard, documents, validation workbench, comparison, queries, reports, and administrative views.
+- **Automated Unit Tests**: Preliminary RBAC test suite (`tests/unit/rbac.test.mjs`) executing under native Node.js test runner.

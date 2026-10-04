@@ -1,5 +1,29 @@
 {
+  "buildCommand": "npm --prefix frontend run build",
+  "outputDirectory": "frontend/dist",
+  "framework": null,
+  "functions": {
+    "backend/functions/api/**/*.ts": {
+      "runtime": "@vercel/node@3"
+    }
+  },
   "rewrites": [
+    { "source": "/api/v1/auth/:action", "destination": "/backend/functions/api/v1/auth/[action]" },
+    { "source": "/api/v1/documents", "destination": "/backend/functions/api/v1/documents" },
+    { "source": "/api/v1/manual-records", "destination": "/backend/functions/api/v1/manual-records" },
+    { "source": "/api/v1/requests", "destination": "/backend/functions/api/v1/requests" },
+    { "source": "/api/v1/reviews", "destination": "/backend/functions/api/v1/reviews" },
+    { "source": "/api/v1/reports", "destination": "/backend/functions/api/v1/reports" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
   ]
 }

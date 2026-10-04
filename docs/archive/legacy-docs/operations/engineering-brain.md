@@ -16,7 +16,7 @@
   5. Parliamentary Query Cell (Query inbox, archive search, AI draft, source verification)
   6. Field / Mine Data Officer (Upload document, my documents, OCR issues, verification)
   7. System Administrator (Users, RBAC permissions, system health, AI services, audit logs, demo seed)
-- **Visual Aesthetic**: Clean, modern, calm, data-dense SaaS matching the visual reference (`deisgn reference/ref1.png` and `ref2.png`). Slim sidebar, rounded pill navigation, large readable metric stats, soft border cards (16-20px radii), high contrast light/dark surfaces.
+- **Visual Aesthetic**: Clean, modern, calm, data-dense SaaS matching the visual reference (`assets/design-references/ref1.png` and `ref2.png`). Slim sidebar, rounded pill navigation, large readable metric stats, soft border cards (16-20px radii), high contrast light/dark surfaces.
 - **Security & Reliability**:
   - No client-side private API keys (Grok keys & Supabase service role keys never in browser or `VITE_*` variables).
   - Source grounding is mandatory for all AI answers.

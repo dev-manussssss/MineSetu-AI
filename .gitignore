@@ -36,7 +36,27 @@ Thumbs.db
 
 # Testing
 coverage/
+tests/qa-evidence/*.png
+!tests/qa-evidence/qa-report.json
 
 # Local scratch and temp
 scratch/
 tmp/
+exports/
+facsimiles/
+
+# Python Virtual Environments & Bytecode
+.venv/
+*/.venv/
+venv/
+ENV/
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Vercel
+.vercel/

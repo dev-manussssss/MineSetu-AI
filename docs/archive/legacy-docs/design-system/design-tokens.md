@@ -2,7 +2,7 @@
 
 ## 1. Visual Reference & Style Heritage
 
-This design system is modeled directly on the institutional SaaS reference screenshots in `deisgn reference/` (`ref1.png` and `ref2.png`).
+This design system is modeled directly on the institutional SaaS reference screenshots in `assets/design-references/` (`ref1.png` and `ref2.png`).
 
 - **Dominant Feel**: Ultra-clean, modern, calm, operational, data-dense, with spacious layout.
 - **Surface Hierarchy**: Pure light surfaces (`#FFFFFF`), subtle tinted backgrounds (`#F8FAFC`), crisp hairline borders (`#E2E8F0`), and dark charcoal surfaces (`#0F172A`) for executive navigation and contrast.

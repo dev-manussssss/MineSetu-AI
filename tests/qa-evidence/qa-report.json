@@ -1,0 +1,132 @@
+{
+  "summary": {
+    "totalTests": 24,
+    "passed": 24,
+    "failed": 0,
+    "warnings": 0
+  },
+  "consoleErrors": [],
+  "failedRequests": [],
+  "testResults": [
+    {
+      "name": "Landing Page Title Validation",
+      "status": "PASS",
+      "details": "MineSetu AI — Coal-Sector Reporting & Workflow Prototype"
+    },
+    {
+      "name": "Landing Page Broken Images Check",
+      "status": "PASS",
+      "details": "Broken: 0"
+    },
+    {
+      "name": "Landing Page Mobile Zero-Overflow (390px)",
+      "status": "PASS",
+      "details": "scrollWidth: 390px, innerWidth: 390px"
+    },
+    {
+      "name": "Login Persona Cards Count",
+      "status": "PASS",
+      "details": "Found: 4"
+    },
+    {
+      "name": "Login Redirection to Dashboard",
+      "status": "PASS",
+      "details": "http://localhost:5173/dashboard"
+    },
+    {
+      "name": "TopHeader Notification Bell Toggle",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Dashboard Mobile Zero-Overflow (390px)",
+      "status": "PASS",
+      "details": "scrollWidth: 390px, innerWidth: 390px"
+    },
+    {
+      "name": "Mobile Sidebar Drawer Toggle",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Ask MineSetu Evidence Citations Verification",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Ask MineSetu Mobile Zero-Overflow (390px)",
+      "status": "PASS",
+      "details": "scrollWidth: 390px, innerWidth: 390px"
+    },
+    {
+      "name": "Document Archive Search Filter",
+      "status": "PASS",
+      "details": "Matches: 1"
+    },
+    {
+      "name": "Manual Mining Return Submission",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Validation Workbench Field Editing & Save",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Validation Workbench Accept For Next Stage",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Validation Workbench Mobile Zero-Overflow (390px)",
+      "status": "PASS",
+      "details": "scrollWidth: 390px, innerWidth: 390px"
+    },
+    {
+      "name": "Information Requests Filter Tab",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Create Information Request Modal Submission",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Baseline Variance Document Selectors",
+      "status": "PASS",
+      "details": "Selects: 2"
+    },
+    {
+      "name": "Executive Report Compilation",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Thematic Topic Selection & Word Cloud Interaction",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Role Permissions Matrix Tab",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Settings Page Rendering & Controls",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "RBAC Policy Enforcement: Access Denied Page",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Access Denied Recovery Navigation",
+      "status": "PASS",
+      "details": ""
+    }
+  ]
+}

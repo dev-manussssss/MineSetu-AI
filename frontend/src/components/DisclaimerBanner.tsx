@@ -1,59 +1,50 @@
 import React from 'react';
-import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { AlertCircle, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const DisclaimerBanner: React.FC = () => {
   const { navigateTo } = useApp();
 
   return (
-    <aside aria-label="Prototype Notice" style={{
-      background: '#FFFBEB',
-      borderBottom: '1px solid #FDE68A',
-      padding: '8px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '12px',
-      fontSize: '12px',
-      color: '#92400E',
-      position: 'relative',
-      zIndex: 40
-    }}>
+    <aside
+      aria-label="Prototype Notice"
+      className="disclaimer-banner"
+      style={{
+        backgroundColor: '#FFFBEB',
+        borderBottom: '1px solid #FDE68A',
+        padding: '7px 24px',
+        fontSize: '12px',
+        lineHeight: '1.4',
+        color: '#78350F',
+        position: 'relative',
+        zIndex: 40
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: '#F59E0B',
-          color: '#FFFFFF',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          fontWeight: 700,
-          fontSize: '10px',
-          letterSpacing: '0.04em'
-        }}>
-          <AlertTriangle size={12} /> PROTOTYPE
+        <AlertCircle size={14} style={{ color: '#D97706', flexShrink: 0 }} />
+        <span style={{ fontWeight: 500 }}>
+          MineSetu AI demonstrates a proposed AI-powered extension to the MDMS reporting workflow. This is a standalone prototype, not the official MDMS portal, and live integration is not currently claimed.
         </span>
-        <span style={{ fontWeight: 600 }}>MDMS + Mindsetu AI Extension Concept:</span>
-        <span>Demonstration prototype for research and evaluation. Not an official Government of India, MoC, CIL, or CMPDI production system. All data synthetic.</span>
       </div>
       <button
-        onClick={() => navigateTo('/admin')}
+        onClick={() => navigateTo('/settings')}
         style={{
-          background: 'transparent',
+          background: 'none',
           border: 'none',
           color: '#B45309',
           cursor: 'pointer',
-          fontWeight: 600,
+          fontWeight: 500,
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '4px',
+          gap: '3px',
           fontSize: '11px',
-          textDecoration: 'underline'
+          padding: 0,
+          whiteSpace: 'nowrap'
         }}
+        title="View prototype configuration and demo settings"
       >
-        <span>View Scope & Health</span>
-        <ExternalLink size={12} />
+        <span>Demo Scope & Status</span>
+        <ChevronRight size={12} />
       </button>
     </aside>
   );
