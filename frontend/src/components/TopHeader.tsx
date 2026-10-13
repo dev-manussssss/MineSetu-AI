@@ -108,7 +108,7 @@ export const TopHeader: React.FC<{
           style={{ height: '34px', padding: '0 12px', fontSize: '12px', borderRadius: 'var(--radius-sm)' }}
         >
           <Sparkles size={13} />
-          <span>Ask MineSetu</span>
+          <span>Ask-MineSetu</span>
         </button>
 
         {/* Date Filter Badge */}

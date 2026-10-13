@@ -129,7 +129,7 @@ async function runQA() {
 
     const personaCount = await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll('button[type="button"]')).filter(b =>
-        b.textContent.includes('Ministry') || b.textContent.includes('CIL') || b.textContent.includes('CMPDI') || b.textContent.includes('Subsidiary')
+        b.textContent.includes('Ministry') || b.textContent.includes('CIL') || b.textContent.includes('CMPDI') || b.textContent.includes('Mine Officer') || b.textContent.includes('Subsidiary')
       );
       return btns.length;
     });

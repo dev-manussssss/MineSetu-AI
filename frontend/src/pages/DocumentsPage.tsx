@@ -234,12 +234,12 @@ export const DocumentsPage: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Documents & Dual Ingestion
+              Documents & Ingestion
             </h1>
             <span className="badge badge-demo">Sample Archive</span>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Add reports, scanned returns, or enter structured figures directly with explicit units and source lineage
+            Upload operational documents or enter structured operational data manually with explicit units and source lineage
           </p>
         </div>
 

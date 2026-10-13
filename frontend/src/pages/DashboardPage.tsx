@@ -61,14 +61,14 @@ export const DashboardPage: React.FC = () => {
               {isMinistry && 'Ministry Executive Workspace'}
               {isCILHQ && 'Coal India Headquarters Management Workspace'}
               {isCMPDI && 'CMPDI Technical Authority Workspace'}
-              {isSubsidiary && 'Subsidiary & Colliery Operational Workspace'}
+              {isSubsidiary && 'Mine Officer Operational Workspace'}
             </h1>
             <span className="badge badge-demo">Sample Data</span>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {isMinistry && 'Cross-organisation visibility, ministerial information requests, response review, and draft executive reporting.'}
             {isCILHQ && 'Subsidiary-level information follow-up, production consolidation, baseline comparison, and draft reports.'}
-            {isCMPDI && 'Technical record review, evidence inspection, discrepancy identification, and geological draft reports.'}
+            {isCMPDI && 'CMPDI provides mine-planning, engineering, exploration, and technical consultancy support. Review technical records, inspect evidence in the validation workbench, identify discrepancies, and draft technical reports.'}
             {isSubsidiary && 'Add operational records, correct extracted information, answer information requests, and submit returns for review.'}
           </p>
         </div>
@@ -96,7 +96,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Prominent "Ask MineSetu" Quick Inquiry Bar (Present on ALL Dashboards) */}
+      {/* 2. Prominent "Ask-MineSetu" Quick Inquiry Bar (Present on ALL Dashboards) */}
       <div className="card-base" style={{
         padding: '12px 16px',
         backgroundColor: '#FFFFFF',
@@ -120,7 +120,7 @@ export const DashboardPage: React.FC = () => {
             type="text"
             value={quickQuery}
             onChange={(e) => setQuickQuery(e.target.value)}
-            placeholder="Ask MineSetu anything: 'What was Rajmahal production?', 'Compare SECL vs ECL OB removal', 'Draft FY26 Q2 brief'..."
+            placeholder="Ask-MineSetu anything: 'What was Rajmahal production?', 'Compare SECL vs ECL OB removal', 'Draft FY26 Q2 brief'..."
             style={{
               flex: 1,
               border: 'none',
@@ -136,7 +136,7 @@ export const DashboardPage: React.FC = () => {
             className="btn btn-primary"
             style={{ height: '34px', padding: '0 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>Ask MineSetu</span>
+            <span>Ask-MineSetu</span>
             <ArrowRight size={13} />
           </button>
         </form>
@@ -226,7 +226,7 @@ export const DashboardPage: React.FC = () => {
               className="btn btn-outline"
               style={{ height: '36px', fontSize: '13px', padding: '0 14px' }}
             >
-              <Sparkles size={14} /> Open Ask MineSetu
+              <Sparkles size={14} /> Open Ask-MineSetu
             </button>
           </div>
 

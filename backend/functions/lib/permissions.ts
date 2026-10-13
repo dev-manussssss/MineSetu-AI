@@ -34,7 +34,6 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   cmpdi: [
     'documents.upload',
@@ -58,7 +57,6 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'requests.respond',
     'analytics.subsidiary',
     'queries.execute',
-    'audit.view',
   ],
 
   // Legacy mappings
@@ -87,7 +85,6 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   cmpdi_nodal: [
     'documents.upload',
@@ -114,7 +111,6 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   parliamentary_cell: [
     'documents.view',
@@ -152,3 +148,8 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'audit.view',
   ],
 };
+
+export function hasPermission(role: string, permission: string): boolean {
+  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+}
+

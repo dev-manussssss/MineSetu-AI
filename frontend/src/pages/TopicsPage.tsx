@@ -80,7 +80,7 @@ export const TopicsPage: React.FC = () => {
           style={{ height: '36px', fontSize: '13px', padding: '0 16px' }}
         >
           <Sparkles size={14} />
-          <span>Ask MineSetu About Topics</span>
+          <span>Ask-MineSetu About Topics</span>
         </button>
       </div>
 
@@ -347,7 +347,7 @@ export const TopicsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Action to Inquire in Ask MineSetu */}
+            {/* Action to Inquire in Ask-MineSetu */}
             <button
               onClick={() => {
                 navigateTo('/ask');
@@ -356,7 +356,7 @@ export const TopicsPage: React.FC = () => {
               style={{ width: '100%', height: '36px', fontSize: '13px', justifyContent: 'center' }}
             >
               <Sparkles size={14} />
-              <span>Inquire in Ask MineSetu</span>
+              <span>Inquire in Ask-MineSetu</span>
             </button>
           </div>
         ) : (

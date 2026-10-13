@@ -71,7 +71,7 @@ interface AppContextType {
   selectedTopic: string | null;
   selectTopic: (topicName: string | null) => void;
 
-  // AI Query ("Ask MineSetu")
+  // AI Query ("Ask-MineSetu")
   chatMessages: ChatMessage[];
   executeAIQuery: (query: string, thinkingMode?: boolean, attachedDocIds?: string[]) => Promise<AIQueryResponse>;
   clearChat: () => void;
@@ -146,12 +146,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
-  // 4. Conversational History for Ask MineSetu
+  // 4. Conversational History for Ask-MineSetu
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-welcome',
       sender: 'assistant',
-      text: 'Welcome to Ask MineSetu. Inquire about multi-subsidiary production, overburden removal, HEMM availability, or describe a statutory report draft you need compiled.',
+      text: 'How can I help with your mining reports? Ask about verified production figures, mining records, reporting discrepancies, or source documents.',
       timestamp: '2026-10-04T09:00:00Z',
     }
   ]);
@@ -451,7 +451,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // AI Query Execution (Grounded RAG Engine)
+  // AI Query Execution (Grounded RAG Engine with Robust Intent Classification)
   const executeAIQuery = async (
     query: string,
     thinkingMode = false,
@@ -463,7 +463,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const delay = thinkingMode ? 700 : 350;
     await new Promise(r => setTimeout(r, delay));
 
-    const lower = query.toLowerCase();
+    const trimmed = query.trim();
+    const lower = trimmed.toLowerCase();
 
     // Check attached documents if specified
     const attachedSources = attachedDocIds.map(docId => {
@@ -481,32 +482,237 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }).filter(Boolean) as AIQueryResponse['sources'];
 
-    // Out-of-Domain Anti-Hallucination Guardrail Check
-    if (lower.includes('uranium') || lower.includes('bauxite') || lower.includes('nuclear') || lower.includes('gold')) {
-      const response: AIQueryResponse = {
-        answer: 'Insufficient source evidence exists in authorized records to answer this inquiry. The accessible MineSetu AI archive is restricted to verified coal-sector operational and statutory returns.',
-        confidence: 0.12,
-        status: 'insufficient',
-        sources: [],
-        suggestedFollowUps: [
-          'Review available Coal India subsidiary production returns',
-          'Upload a relevant technical geological document'
-        ]
-      };
-      setChatMessages(prev => [
-        ...prev,
-        { id: `usr-${Date.now()}`, sender: 'user', text: query, timestamp: new Date().toISOString() },
-        { id: `ast-${Date.now()}`, sender: 'assistant', text: response.answer, timestamp: new Date().toISOString(), response }
-      ]);
-      return response;
-    }
-
-    // Query Pattern Matching over verified sample records
     let answerText = '';
     let sources: AIQueryResponse['sources'] = [];
+    let status: AIQueryResponse['status'] = 'sufficient';
+    let confidence = 0.95;
+    let suggestedFollowUps: string[] = [];
 
-    if (lower.includes('rajmahal') || lower.includes('ecl')) {
-      answerText = 'According to the verified monthly operational returns for ECL Rajmahal OCP (August 2026), raw coal production totaled 45,210 tonnes with an overburden removal of 142,500 m³. Average ash content was determined at 38.4% across 18 despatched railway rakes.';
+    // 1. Security / Prompt Injection / Jailbreak Guardrail
+    if (
+      lower.includes('ignore previous') ||
+      lower.includes('ignore all') ||
+      lower.includes('bypass rules') ||
+      lower.includes('system prompt') ||
+      lower.includes('pretend to be') ||
+      lower.includes('jailbreak')
+    ) {
+      answerText = 'Security Notice: Ask-MineSetu operates strictly within authorized, role-based coal sector governance frameworks. Instructions attempting to bypass validation rules, auditing mechanisms, or verified source groundings are disregarded. Please submit a valid operational inquiry.';
+      confidence = 0.99;
+      status = 'insufficient';
+      suggestedFollowUps = [
+        'Query verified ECL production records',
+        'Review available SECL operational returns'
+      ];
+    }
+    // 2. Greetings & Introductions (Natural & Brief, NO fake mining figures!)
+    else if (
+      /^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening)|hola)(\s+[a-z]+)?[.!?]?$/i.test(lower) ||
+      lower === 'hi' ||
+      lower === 'hello' ||
+      lower === 'hey' ||
+      lower === 'who are you' ||
+      lower === 'what can you do' ||
+      lower === 'help' ||
+      lower === 'how does this work'
+    ) {
+      answerText = `Hello! I am **Ask-MineSetu**, your AI assistant for verified coal-sector operational records and statutory returns across Coal India subsidiaries.
+
+I can help you:
+• Query verified raw coal production, overburden (OB) stripping, and rail despatches (e.g., ECL Rajmahal OCP, SECL Gevra Mega Project).
+• Inspect grounded evidence, OCR extractions, and original document references in the Validation Workbench.
+• Compare multi-subsidiary operational metrics and fleet availability.
+• Assist in drafting executive and statutory reports based strictly on approved records.
+
+How can I assist you with your mining records today?`;
+      confidence = 1.0;
+      status = 'sufficient';
+      sources = [];
+      suggestedFollowUps = [
+        'What was the monthly coal production and OB removal at Rajmahal OCP?',
+        'What is the surface miner operating uptime and production at Gevra Mega Project?',
+        'Compare Q2 returns between ECL and SECL',
+        'Draft an executive summary report for monitored returns'
+      ];
+    }
+    // 3. Out-of-Domain Anti-Hallucination Guardrail Check
+    else if (
+      lower.includes('uranium') ||
+      lower.includes('bauxite') ||
+      lower.includes('nuclear') ||
+      lower.includes('gold') ||
+      lower.includes('petroleum') ||
+      lower.includes('crude oil') ||
+      lower.includes('crypto') ||
+      lower.includes('bitcoin') ||
+      lower.includes('weather forecast')
+    ) {
+      answerText = 'Anti-Hallucination Guardrail: Insufficient source evidence exists in authorized records to answer this inquiry. The accessible MineSetu archive is strictly restricted to verified coal-sector operational, excavation, and statutory returns. No records exist for external commodities or non-coal subjects.';
+      confidence = 0.12;
+      status = 'insufficient';
+      sources = [];
+      suggestedFollowUps = [
+        'Review available Coal India subsidiary production returns',
+        'What was the monthly coal production and OB removal at Rajmahal OCP?'
+      ];
+    }
+    // 4. Report Generation Requests
+    else if (
+      lower.includes('draft report') ||
+      lower.includes('create report') ||
+      lower.includes('generate report') ||
+      lower.includes('compile report') ||
+      lower.includes('executive summary') ||
+      lower.includes('statutory draft') ||
+      lower.includes('prepare report') ||
+      lower.includes('quarterly summary')
+    ) {
+      answerText = `### Draft Operational Summary Report (Verified Returns)
+
+**Reporting Cycle:** August – September 2026
+**Entities Included:** ECL (Rajmahal OCP), SECL (Gevra Mega Project), NCL (Jayant OCP), CCL (Piparwar OCP)
+
+**1. Operational Highlights:**
+• **SECL Gevra Mega Project:** Heavy excavation achieved 524,300 tonnes of raw coal production and 1,120,000 m³ overburden removal (Surface miner operating hours: 432 hrs; Conveyor uptime: 98.2%). Status: Approved.
+• **ECL Rajmahal OCP:** Monitored monthly coal production reached 45,210 tonnes with 142,500 m³ OB removal; 38.4% average ash content. Status: Verified (Rail despatch rakes flagged for manual review).
+• **NCL Jayant OCP:** Dragline excavation reached 348,000 m³ with 91.8% HEMM fleet availability. Status: Approved.
+• **CCL Piparwar OCP:** Washed coal despatch reached 82,100 tonnes via 21 loaded railway rakes. Status: Approved.
+
+**2. Data Gaps & Pending Items:**
+• **BCCL Moonidih UG:** Raw coal feed is 28,400 tonnes, but clean coking yield (48.2%) is flagged due to carbon-copy slip smudge. Excluded from consolidated totals pending Nodal review.
+• **WCL & MCL:** Formal returns for this cycle have not been ingested.
+
+You can click **"Create Report Draft"** below to load these verified figures into the Reports Builder for export.`;
+      confidence = 0.96;
+      status = 'sufficient';
+      sources = [
+        {
+          documentId: 'doc-secl-002',
+          documentTitle: 'Gevra Mega Project Heavy Excavation Shift Summary',
+          subsidiary: 'SECL',
+          collieryName: 'Gevra OCP',
+          pageNumber: 1,
+          tableReference: 'Surface Miner Shift Log',
+          excerpt: 'Cumulative output exceeds 520,000 MT for the ten-day period with 98.2% conveyor belt uptime.',
+          verifiedStatus: 'approved'
+        },
+        {
+          documentId: 'doc-ecl-001',
+          documentTitle: 'Rajmahal OCP Monthly Production & Despatch Return - Aug 2026',
+          subsidiary: 'ECL',
+          collieryName: 'Rajmahal OCP',
+          pageNumber: 1,
+          tableReference: 'Table 1: Excavation Summary',
+          excerpt: 'Daily coal excavation totaled 45,210 tonnes. Overburden stripping reached 142,500 m³ with 3 shovel-dumper spreads.',
+          verifiedStatus: 'verified'
+        },
+        {
+          documentId: 'doc-ncl-004',
+          documentTitle: 'Jayant OCP Dragline Productivity & HEMM Uptime Return',
+          subsidiary: 'NCL',
+          collieryName: 'Jayant OCP',
+          pageNumber: 2,
+          tableReference: 'Dragline Log',
+          excerpt: 'Dragline excavation reached 348,000 m³ with 91.8% fleet availability.',
+          verifiedStatus: 'approved'
+        },
+        {
+          documentId: 'doc-ccl-005',
+          documentTitle: 'Piparwar Open Cast Beneficiation & Despatch Return',
+          subsidiary: 'CCL',
+          collieryName: 'Piparwar OCP',
+          pageNumber: 1,
+          tableReference: 'Despatch Log',
+          excerpt: 'Washed coal despatch reached 82,100 tonnes via 21 loaded railway rakes.',
+          verifiedStatus: 'approved'
+        }
+      ];
+      suggestedFollowUps = [
+        'Open in Reports Builder to finalize statutory filing',
+        'Inspect BCCL Moonidih flagged yield in Validation Workbench',
+        'Create an Information Request for missing WCL returns'
+      ];
+    }
+    // 5. Ambiguous / Too Vague Questions (Missing Colliery or Period)
+    else if (
+      /^(what is the production\??|production\??|coal production\??|how much coal\??|show data|status\??|give me numbers|show reports\??|what are the numbers\??)$/i.test(lower)
+    ) {
+      answerText = `Could you please clarify which operational entity or reporting period you would like to inspect?
+
+Available verified datasets in this environment:
+1. **ECL — Rajmahal OCP** (Monthly Return, August 2026: 45,210 T coal, 142,500 m³ OB removal)
+2. **SECL — Gevra Mega Project** (Shift Summary, September 2026: 524,300 T coal, 432 surface miner hrs)
+3. **NCL — Jayant OCP** (HEMM Return, September 2026: 348,000 m³ dragline, 91.8% fleet availability)
+4. **CCL — Piparwar OCP** (Despatch Return, August 2026: 82,100 T washed coal, 21 rakes)
+5. **BCCL — Moonidih UG** (Washery Audit, Q2 FY 2026: 28,400 T feed, 48.2% clean yield — flagged)
+
+Please select one of the queries below or specify the colliery name.`;
+      confidence = 0.60;
+      status = 'insufficient';
+      sources = [];
+      suggestedFollowUps = [
+        'What was the monthly coal production and OB removal at Rajmahal OCP?',
+        'What is the surface miner operating uptime and production at Gevra Mega Project?',
+        'Compare Q2 returns between ECL and SECL'
+      ];
+    }
+    // 6. Comparative Queries (ECL vs SECL)
+    else if (
+      lower.includes('compare') ||
+      (lower.includes('ecl') && lower.includes('secl')) ||
+      lower.includes('versus') ||
+      lower.includes('vs')
+    ) {
+      answerText = `### Operational Comparison: ECL vs SECL (Q2 2026 Returns)
+
+• **SECL (Gevra Mega Project, Open Cast):**
+  - **Raw Coal Production:** 524,300 tonnes
+  - **Overburden (OB) Removal:** 1,120,000 m³
+  - **Equipment Availability:** 432 surface miner operating hours with 98.2% conveyor belt uptime.
+  - **Status:** Approved (verified by Area Technical team).
+
+• **ECL (Rajmahal OCP, Open Cast):**
+  - **Raw Coal Production:** 45,210 tonnes
+  - **Overburden (OB) Removal:** 142,500 m³
+  - **Quality & Despatch:** 38.4% average ash content; 18 rail rakes despatched (rail rake slip flagged for manual review due to blur).
+  - **Status:** Verified (Bench 3 monsoon de-watering noted).
+
+**Operational Analysis:** SECL Gevra operates world-scale high-capacity continuous surface mining, achieving ~11.6x the raw coal output of ECL Rajmahal during this reporting interval.`;
+      confidence = 0.98;
+      status = 'sufficient';
+      sources = [
+        {
+          documentId: 'doc-secl-002',
+          documentTitle: 'Gevra Mega Project Heavy Excavation Shift Summary',
+          subsidiary: 'SECL',
+          collieryName: 'Gevra OCP',
+          pageNumber: 1,
+          tableReference: 'Surface Miner Shift Log',
+          excerpt: 'Cumulative output exceeds 520,000 MT for the ten-day period with 98.2% conveyor belt uptime.',
+          verifiedStatus: 'approved'
+        },
+        {
+          documentId: 'doc-ecl-001',
+          documentTitle: 'Rajmahal OCP Monthly Production & Despatch Return - Aug 2026',
+          subsidiary: 'ECL',
+          collieryName: 'Rajmahal OCP',
+          pageNumber: 1,
+          tableReference: 'Table 1: Excavation Summary',
+          excerpt: 'Daily coal excavation totaled 45,210 tonnes. Overburden stripping reached 142,500 m³ with 3 shovel-dumper spreads.',
+          verifiedStatus: 'verified'
+        }
+      ];
+      suggestedFollowUps = [
+        'Compile this comparative data into a draft report',
+        'Inspect Rajmahal OCP document in Validation Workbench',
+        'View SECL Gevra shift summary in Validation Workbench'
+      ];
+    }
+    // 7. ECL / Rajmahal Queries
+    else if (lower.includes('rajmahal') || (lower.includes('ecl') && !lower.includes('secl'))) {
+      answerText = 'According to the verified monthly operational returns for ECL Rajmahal OCP (August 2026), raw coal production totaled 45,210 tonnes with an overburden removal of 142,500 m³. Average ash content was determined at 38.4% across 18 despatched railway rakes (1 rail despatch field flagged for verification).';
+      confidence = 0.97;
+      status = 'sufficient';
       sources = [
         {
           documentId: 'doc-ecl-001',
@@ -519,8 +725,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           verifiedStatus: 'verified'
         }
       ];
-    } else if (lower.includes('gevra') || lower.includes('secl')) {
+      suggestedFollowUps = [
+        'Inspect source document in Validation Workbench',
+        'Compare Rajmahal returns with SECL Gevra',
+        'Draft a monthly return report for ECL'
+      ];
+    }
+    // 8. SECL / Gevra Queries
+    else if (lower.includes('gevra') || lower.includes('secl') || lower.includes('surface miner')) {
       answerText = 'During the September 2026 reporting cycle at SECL Gevra Mega Project, heavy excavation achieved 524,300 tonnes of coal production and 1,120,000 m³ of overburden removal. Surface miner operating hours totaled 432 hours with 98.2% conveyor uptime.';
+      confidence = 0.99;
+      status = 'sufficient';
       sources = [
         {
           documentId: 'doc-secl-002',
@@ -533,28 +748,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           verifiedStatus: 'approved'
         }
       ];
-    } else if (lower.includes('compare') || (lower.includes('ecl') && lower.includes('secl'))) {
-      answerText = 'Comparing Q2 returns between ECL (Rajmahal OCP) and SECL (Gevra Mega Project): SECL recorded 524,300 tonnes of raw coal production (1,120,000 m³ OB removal) under 98.2% conveyor availability. ECL recorded 45,210 tonnes (142,500 m³ OB removal), reflecting monsoon bench inundation in Bench 3.';
-      sources = [
-        {
-          documentId: 'doc-secl-002',
-          documentTitle: 'Gevra Mega Project Heavy Excavation Shift Summary',
-          subsidiary: 'SECL',
-          pageNumber: 1,
-          excerpt: 'Cumulative output exceeds 520,000 MT for the ten-day period.',
-          verifiedStatus: 'approved'
-        },
-        {
-          documentId: 'doc-ecl-001',
-          documentTitle: 'Rajmahal OCP Monthly Production Return',
-          subsidiary: 'ECL',
-          pageNumber: 1,
-          excerpt: 'Daily coal excavation totaled 45,210 tonnes.',
-          verifiedStatus: 'verified'
-        }
+      suggestedFollowUps = [
+        'Inspect Gevra shift log in Validation Workbench',
+        'Compare Gevra performance with ECL Rajmahal',
+        'Compile this comparative data into a draft report'
       ];
-    } else if (lower.includes('washery') || lower.includes('bccl') || lower.includes('moonidih')) {
-      answerText = 'At BCCL Moonidih Underground washery, raw coal feed was audited at 28,400 tonnes with clean coking yield preliminarily extracted at 48.2% and middlings production at 8,950 tonnes. Note: Carbon-copy slip decimals are flagged for human clarification.';
+    }
+    // 9. BCCL / Moonidih / Washery Queries
+    else if (lower.includes('washery') || lower.includes('bccl') || lower.includes('moonidih') || lower.includes('coking')) {
+      answerText = 'At BCCL Moonidih Underground washery, raw coal feed was audited at 28,400 tonnes with clean coking yield preliminarily extracted at 48.2% and middlings production at 8,950 tonnes. Note: Carbon-copy slip decimals are flagged for human clarification in the Validation Workbench.';
+      confidence = 0.88;
+      status = 'insufficient';
       sources = [
         {
           documentId: 'doc-bccl-003',
@@ -562,21 +766,130 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           subsidiary: 'BCCL',
           collieryName: 'Moonidih UG',
           pageNumber: 1,
+          tableReference: 'Washery Throughput Table',
           excerpt: 'Raw Coal Feed: 28,400 T. Clean Coking Yield %: 48.2% [Flagged for Decimal Clarification].',
           verifiedStatus: 'needs_review'
         }
       ];
-    } else {
-      answerText = `In response to "${query}": Synthesized from ${documents.length} verified multi-subsidiary returns. Total monitored production across SECL, ECL, and NCL exceeds 917,510 tonnes for the current reporting cycle, with dragline and surface miner fleet availability exceeding 90%.`;
+      suggestedFollowUps = [
+        'Open Moonidih audit in Validation Workbench to verify smudged values',
+        'Create an Information Request to BCCL Nodal Cell',
+        'Check average ash and coking yield parameters'
+      ];
+    }
+    // 10. NCL / Jayant / Dragline / HEMM
+    else if (lower.includes('jayant') || lower.includes('ncl') || lower.includes('dragline') || lower.includes('hemm')) {
+      answerText = 'At NCL Jayant OCP (September 2026), dragline excavation reached 348,000 m³ with an overall HEMM fleet availability of 91.8%. Dragline 24/96 operated at 89.4% operational efficiency with cycle times averaging 62 seconds per pass.';
+      confidence = 0.98;
+      status = 'sufficient';
       sources = [
         {
-          documentId: documents[0].id,
-          documentTitle: documents[0].title,
-          subsidiary: documents[0].subsidiaryCode,
-          pageNumber: 1,
-          excerpt: documents[0].extractedSummary,
-          verifiedStatus: documents[0].status === 'approved' ? 'approved' : 'verified'
+          documentId: 'doc-ncl-004',
+          documentTitle: 'Jayant OCP Dragline Productivity & HEMM Uptime Return',
+          subsidiary: 'NCL',
+          collieryName: 'Jayant OCP',
+          pageNumber: 2,
+          tableReference: 'HEMM Availability & Dragline Productivity',
+          excerpt: 'Dragline 24/96 operated at 89.4% operational efficiency. Dragline cycle time averaged 62 seconds per pass.',
+          verifiedStatus: 'approved'
         }
+      ];
+      suggestedFollowUps = [
+        'Inspect Jayant HEMM return in Validation Workbench',
+        'Draft an executive summary report for monitored returns'
+      ];
+    }
+    // 11. CCL / Piparwar / Despatch
+    else if (lower.includes('piparwar') || lower.includes('ccl') || lower.includes('rake') || lower.includes('despatch')) {
+      answerText = 'At CCL Piparwar OCP (August 2026), beneficiated washed coal despatch reached 82,100 tonnes across 21 loaded railway rakes via the Tori-Shivpur rail line with zero recorded demurrage.';
+      confidence = 0.96;
+      status = 'sufficient';
+      sources = [
+        {
+          documentId: 'doc-ccl-005',
+          documentTitle: 'Piparwar Open Cast Beneficiation & Despatch Return',
+          subsidiary: 'CCL',
+          collieryName: 'Piparwar OCP',
+          pageNumber: 1,
+          tableReference: 'Despatch & Railway Rakes Log',
+          excerpt: 'Beneficiated coal rakes despatched to Dadri & Rihand STPS via Tori-Shivpur rail line. Zero demurrage recorded.',
+          verifiedStatus: 'approved'
+        }
+      ];
+      suggestedFollowUps = [
+        'Inspect Piparwar return in Validation Workbench',
+        'Review multi-subsidiary rail despatch statistics'
+      ];
+    }
+    // 12. Safety & Compliance
+    else if (lower.includes('safety') || lower.includes('compliance') || lower.includes('dgms')) {
+      answerText = 'Mechanized HEMM safety audit returns for Q2 show 94.2% statutory compliance across mechanized open cast operations. All active dragline and shovel-dumper spreads at Jayant OCP and Gevra OCP operated with zero DGMS critical safety notices recorded in audited shift logs.';
+      confidence = 0.92;
+      status = 'sufficient';
+      sources = [
+        {
+          documentId: 'doc-ncl-004',
+          documentTitle: 'Jayant OCP Dragline Productivity & HEMM Uptime Return',
+          subsidiary: 'NCL',
+          collieryName: 'Jayant OCP',
+          pageNumber: 3,
+          tableReference: 'Statutory Safety & Fleet Compliance',
+          excerpt: 'HEMM fleet availability 91.8%. Zero DGMS statutory violations recorded during shift cycles.',
+          verifiedStatus: 'approved'
+        }
+      ];
+      suggestedFollowUps = [
+        'Review Jayant OCP safety compliance records',
+        'Draft safety and equipment availability report'
+      ];
+    }
+    // 13. Data Gaps / Un-ingested Entities (e.g. Korba, 2024, WCL, MCL)
+    else if (
+      lower.includes('korba') ||
+      lower.includes('talcher') ||
+      lower.includes('singareni') ||
+      lower.includes('sccl') ||
+      lower.includes('wcl') ||
+      lower.includes('mcl') ||
+      lower.includes('2024') ||
+      lower.includes('2025')
+    ) {
+      answerText = `No verified operational returns for "${trimmed}" are currently ingested in the authorized archive.
+
+Available ingested returns in this environment cover:
+• **ECL** (Rajmahal OCP – Aug 2026)
+• **SECL** (Gevra Mega Project – Sep 2026)
+• **NCL** (Jayant OCP – Sep 2026)
+• **CCL** (Piparwar OCP – Aug 2026)
+• **BCCL** (Moonidih UG Washery – Q2 2026)
+
+To incorporate records for this unit, an authorized officer can upload statutory return documents or submit shift figures via the **Documents & Ingestion** pipeline.`;
+      confidence = 0.15;
+      status = 'insufficient';
+      sources = [];
+      suggestedFollowUps = [
+        'Upload operational documents in Ingestion pipeline',
+        'Create an Information Request for missing returns',
+        'What was the monthly coal production and OB removal at Rajmahal OCP?'
+      ];
+    }
+    // 14. Honest Fallback (Never fabricate figures or hallucinate!)
+    else {
+      answerText = `I could not locate verified coal records matching "${trimmed}" in the current archive.
+
+Ask-MineSetu is strictly grounded on verified Coal India records to prevent hallucination. You can:
+1. **Query specific collieries:** Rajmahal OCP (ECL), Gevra Mega Project (SECL), Jayant OCP (NCL), Piparwar OCP (CCL), or Moonidih UG (BCCL).
+2. **Query specific operational metrics:** Raw coal production, Overburden (OB) removal, HEMM fleet uptime, or Rail despatches.
+3. **Compare performance:** Compare ECL vs SECL excavation figures.
+4. **Draft a report:** Request an executive summary report from verified returns.`;
+      confidence = 0.20;
+      status = 'insufficient';
+      sources = [];
+      suggestedFollowUps = [
+        'What was the monthly coal production and OB removal at Rajmahal OCP?',
+        'What is the surface miner operating uptime and production at Gevra Mega Project?',
+        'Compare Q2 returns between ECL and SECL',
+        'Draft an executive summary report for monitored returns'
       ];
     }
 
@@ -587,14 +900,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const aiRes: AIQueryResponse = {
       answer: answerText,
-      confidence: 0.94,
-      status: 'sufficient',
+      confidence,
+      status,
       sources,
-      suggestedFollowUps: [
-        'Compile this comparative data into a draft report',
-        'Inspect source document in Validation Workbench',
-        'Create an information request for missing months'
-      ]
+      suggestedFollowUps
     };
 
     setChatMessages(prev => [
@@ -611,7 +920,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       {
         id: 'msg-welcome',
         sender: 'assistant',
-        text: 'Welcome to Ask MineSetu. Inquire about multi-subsidiary production, overburden removal, HEMM availability, or describe a statutory report draft you need compiled.',
+        text: 'Welcome to Ask-MineSetu. Inquire about verified multi-subsidiary coal production, overburden removal, HEMM availability, or request assistance compiling statutory report drafts.',
         timestamp: new Date().toISOString(),
       }
     ]);

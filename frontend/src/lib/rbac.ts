@@ -37,7 +37,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   cmpdi: [
     'documents.upload',
@@ -61,7 +60,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'requests.respond',
     'analytics.subsidiary',
     'queries.execute',
-    'audit.view',
   ],
 
   // Legacy mappings for backward compatibility
@@ -90,7 +88,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   cmpdi_nodal: [
     'documents.upload',
@@ -117,7 +114,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'queries.execute',
     'reports.generate',
     'topic.analyze',
-    'audit.view',
   ],
   parliamentary_cell: [
     'documents.view',
@@ -184,7 +180,7 @@ export const DEMO_PERSONAS: Record<Role, User> = {
     email: 'cmpdi.nodal@demo.cmpdi.co.in',
     role: 'cmpdi',
     roleLabel: 'CMPDI (Technical Authority)',
-    department: 'Mining Systems & Exploration Data Cell',
+    department: 'Mine Planning, Technical Consultancy & Exploration Cell',
     organization: 'CMPDI',
     subsidiaryCode: 'CMPDI',
     isDemo: true,
@@ -194,7 +190,7 @@ export const DEMO_PERSONAS: Record<Role, User> = {
     name: 'Manoj Kumar Soren',
     email: 'rajmahal.officer@demo.ecl.gov.in',
     role: 'subsidiary_officer',
-    roleLabel: 'Subsidiary / Mine Officer (ECL)',
+    roleLabel: 'Mine Officer (ECL)',
     department: 'Rajmahal Open Cast Project, Area Operational Returns',
     organization: 'Eastern Coalfields Limited',
     subsidiaryCode: 'ECL',
@@ -305,7 +301,7 @@ export function getNavigationForRole(user: User | null | undefined): NavItem[] {
     },
     ask: {
       id: 'ask',
-      label: 'Ask MineSetu',
+      label: 'Ask-MineSetu',
       iconName: 'Sparkles',
       path: '/ask',
       permission: 'queries.execute',
@@ -378,19 +374,19 @@ export function getNavigationForRole(user: User | null | undefined): NavItem[] {
 
   // Role-specific navigation hierarchies
   const roleNavMap: Record<Role, string[]> = {
-    ministry_coal: ['dashboard', 'ask', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
-    cil_hq: ['dashboard', 'ask', 'documents', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
-    cmpdi: ['dashboard', 'ask', 'documents', 'manual', 'review', 'reports', 'topics', 'activity', 'settings'],
-    subsidiary_officer: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'activity', 'settings'],
+    ministry_coal: ['dashboard', 'ask', 'requests', 'review', 'reports', 'activity', 'settings'],
+    cil_hq: ['dashboard', 'ask', 'documents', 'requests', 'review', 'reports', 'settings'],
+    cmpdi: ['dashboard', 'ask', 'documents', 'manual', 'review', 'reports', 'activity', 'settings'],
+    subsidiary_officer: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'settings'],
 
     // Legacy aliases
-    ministry_exec: ['dashboard', 'ask', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
-    cil_exec: ['dashboard', 'ask', 'documents', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
-    cmpdi_nodal: ['dashboard', 'ask', 'documents', 'manual', 'review', 'reports', 'topics', 'activity', 'settings'],
-    subsidiary_mgr: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
-    parliamentary_cell: ['dashboard', 'ask', 'requests', 'reports', 'topics', 'settings'],
-    field_officer: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'activity', 'settings'],
-    sys_admin: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'review', 'reports', 'topics', 'activity', 'settings'],
+    ministry_exec: ['dashboard', 'ask', 'requests', 'review', 'reports', 'activity', 'settings'],
+    cil_exec: ['dashboard', 'ask', 'documents', 'requests', 'review', 'reports', 'settings'],
+    cmpdi_nodal: ['dashboard', 'ask', 'documents', 'manual', 'review', 'reports', 'activity', 'settings'],
+    subsidiary_mgr: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'review', 'reports', 'settings'],
+    parliamentary_cell: ['dashboard', 'ask', 'requests', 'reports', 'settings'],
+    field_officer: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'settings'],
+    sys_admin: ['dashboard', 'ask', 'documents', 'manual', 'requests', 'review', 'reports', 'activity', 'settings'],
   };
 
   const navKeys = roleNavMap[user.role] || ['dashboard', 'ask', 'documents', 'settings'];

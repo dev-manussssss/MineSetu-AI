@@ -103,7 +103,7 @@ export const RequestsPage: React.FC = () => {
 
   const handleResponseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeRequest || !responseText.trim()) return;
+    if (!activeRequest || !responseText.trim() || !can(currentUser, 'requests.respond')) return;
 
     respondToRequest(activeRequest.id, responseText, responseAttachedDocIds);
     setIsRespondModalOpen(false);
@@ -521,7 +521,7 @@ export const RequestsPage: React.FC = () => {
             {/* Contextual Action Bar */}
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {/* Respondent Actions */}
-              {activeRequest.status !== 'completed' && (
+              {activeRequest.status !== 'completed' && can(currentUser, 'requests.respond') && (
                 <button
                   onClick={() => setIsRespondModalOpen(true)}
                   className="btn btn-primary"
@@ -567,7 +567,7 @@ export const RequestsPage: React.FC = () => {
                 className="btn btn-outline"
                 style={{ fontSize: '12px' }}
               >
-                <span>Inquire in Ask MineSetu</span>
+                <span>Inquire in Ask-MineSetu</span>
               </button>
             </div>
           </div>

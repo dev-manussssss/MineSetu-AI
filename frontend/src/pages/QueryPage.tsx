@@ -10,7 +10,11 @@ import {
   Paperclip,
   BrainCircuit,
   FileText,
-  X
+  X,
+  Sparkles,
+  Bot,
+  User,
+  ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -33,11 +37,41 @@ export const QueryPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const SUGGESTED_QUERIES = [
-    'What was the monthly coal production and OB removal at Rajmahal OCP?',
-    'What is the surface miner operating uptime and production at Gevra Mega Project?',
-    'What is the overall safety audit compliance score for mechanized HEMM?',
-    'What are the uranium reserves in central mining zones?' // Demonstrates anti-hallucination guardrail
+  const QUICK_PROMPT_CARDS = [
+    {
+      title: 'Rajmahal Coal Production (ECL)',
+      subtitle: 'Raw coal excavation, OB removal & rail rakes',
+      query: 'What was the monthly coal production and OB removal at Rajmahal OCP?',
+      tag: 'ECL · Aug 2026'
+    },
+    {
+      title: 'Gevra Surface Miner Uptime (SECL)',
+      subtitle: 'Heavy excavation, surface miner hours & conveyor uptime',
+      query: 'What is the surface miner operating uptime and production at Gevra Mega Project?',
+      tag: 'SECL · Sep 2026'
+    },
+    {
+      title: 'Compare ECL & SECL Performance',
+      subtitle: 'Multi-subsidiary excavation, stripping & recovery metrics',
+      query: 'Compare Q2 operational excavation returns between ECL and SECL',
+      tag: 'Comparative'
+    },
+    {
+      title: 'Draft Operational Summary Report',
+      subtitle: 'Compile monitored multi-subsidiary returns into a brief',
+      query: 'Draft an operational summary report for monitored returns',
+      tag: 'Statutory Draft'
+    }
+  ];
+
+  const BOTTOM_SUGGESTED_CHIPS = [
+    'Rajmahal OCP production (ECL)',
+    'Gevra Mega Project surface miner (SECL)',
+    'Compare ECL vs SECL',
+    'Jayant OCP dragline productivity (NCL)',
+    'Piparwar washed coal despatches (CCL)',
+    'Moonidih UG washery yield (BCCL)',
+    'Draft operational summary report'
   ];
 
   const scrollToBottom = () => {
@@ -81,26 +115,28 @@ export const QueryPage: React.FC = () => {
   };
 
   const handleCreateReportFromAnswer = (text: string) => {
-    // Navigate to reports builder
+    sessionStorage.setItem('minesetu_draft_seed', text);
     navigateTo('/reports');
-    // Session state or message will guide report compilation
-    console.log('Seeding report with answer:', text);
   };
 
+  const isInitialState = chatMessages.length === 1 && chatMessages[0].id === 'msg-welcome';
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Ask MineSetu
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+              Ask-MineSetu
             </h1>
-            <span className="badge badge-neutral">Source-Grounded RAG</span>
-            <span className="badge badge-neutral">Sample Data</span>
+            <span className="badge badge-neutral" style={{ fontSize: '11px' }}>Source-Grounded RAG</span>
+            <span className="badge badge-demo" style={{ fontSize: '11px', backgroundColor: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE' }}>
+              Verified Multi-Subsidiary Archive
+            </span>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Search records, understand operational figures, inspect citations and prepare reports
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '3px 0 0' }}>
+            Query verified operational returns, inspect original evidence citations, and draft statutory reports
           </p>
         </div>
 
@@ -127,8 +163,10 @@ export const QueryPage: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
-          marginBottom: '16px',
-          backgroundColor: '#FAFAFA'
+          marginBottom: '12px',
+          backgroundColor: '#F8FAFC',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-subtle)'
         }}
       >
         {chatMessages.map(msg => {
@@ -144,33 +182,46 @@ export const QueryPage: React.FC = () => {
                 width: '100%'
               }}
             >
+              {/* Message Header / Timestamp */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '11px',
-                color: 'var(--text-muted)'
+                color: 'var(--text-muted)',
+                padding: '0 4px'
               }}>
-                <span style={{ fontWeight: 600 }}>{isUser ? currentUser.name : 'MineSetu AI Assistant'}</span>
+                {isUser ? (
+                  <>
+                    <User size={12} />
+                    <span style={{ fontWeight: 600 }}>{currentUser.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <Bot size={13} style={{ color: 'var(--accent-primary)' }} />
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Ask-MineSetu</span>
+                    <span className="badge badge-demo" style={{ fontSize: '9px', padding: '1px 5px' }}>Verified Engine</span>
+                  </>
+                )}
                 <span>·</span>
                 <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                {!isUser && <span className="badge badge-demo" style={{ fontSize: '9px', padding: '0 4px' }}>Demo Response</span>}
               </div>
 
+              {/* Message Bubble */}
               <div
                 style={{
-                  maxWidth: isUser ? '80%' : '92%',
-                  padding: '16px 20px',
+                  maxWidth: isUser ? '82%' : '92%',
+                  padding: isUser ? '14px 18px' : '18px 22px',
                   borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  backgroundColor: isUser ? 'var(--accent-primary)' : '#FFFFFF',
+                  backgroundColor: isUser ? '#1E293B' : '#FFFFFF',
                   color: isUser ? '#FFFFFF' : 'var(--text-primary)',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  boxShadow: isUser ? '0 2px 4px rgba(15,23,42,0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
                   border: isUser ? 'none' : '1px solid var(--border-subtle)',
                   fontSize: '13px',
-                  lineHeight: '1.6'
+                  lineHeight: '1.65'
                 }}
               >
-                <div style={{ whiteSpace: 'pre-wrap' }}>
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {msg.text}
                 </div>
 
@@ -178,13 +229,13 @@ export const QueryPage: React.FC = () => {
                 {msg.response && msg.response.sources && msg.response.sources.length > 0 && (
                   <div style={{
                     marginTop: '16px',
-                    paddingTop: '12px',
+                    paddingTop: '14px',
                     borderTop: '1px solid var(--border-subtle)'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                       <BookOpen size={14} style={{ color: 'var(--accent-primary)' }} />
                       <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
-                        Supporting Sources & Evidence Citations
+                        Supporting Sources & Evidence Citations ({msg.response.sources.length})
                       </span>
                     </div>
 
@@ -193,22 +244,27 @@ export const QueryPage: React.FC = () => {
                         <div
                           key={sIdx}
                           style={{
-                            padding: '10px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: 'var(--bg-app)',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            backgroundColor: '#F8FAFC',
                             border: '1px solid var(--border-subtle)',
                             fontSize: '12px'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                              {src.documentTitle}
-                            </span>
-                            <span className="badge badge-match" style={{ fontSize: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {src.documentTitle}
+                              </span>
+                              <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                {src.subsidiary}
+                              </span>
+                            </div>
+                            <span className="badge badge-match" style={{ fontSize: '10px', padding: '1px 6px' }}>
                               Page {src.pageNumber} {src.tableReference ? `· ${src.tableReference}` : ''}
                             </span>
                           </div>
-                          <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)', margin: '0 0 6px' }}>
+                          <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)', margin: '0 0 8px', lineHeight: '1.5' }}>
                             "{src.excerpt}"
                           </p>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
@@ -218,7 +274,7 @@ export const QueryPage: React.FC = () => {
                                 navigateTo('/documents/verify');
                               }}
                               className="btn btn-outline"
-                              style={{ padding: '2px 8px', fontSize: '11px' }}
+                              style={{ padding: '3px 10px', fontSize: '11px', gap: '4px' }}
                             >
                               <ExternalLink size={11} /> Open in Validation Workbench
                             </button>
@@ -229,12 +285,12 @@ export const QueryPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Out of Domain / Insufficient Notice */}
-                {msg.response && msg.response.status === 'insufficient' && (
+                {/* Anti-Hallucination Guardrail / Insufficient Notice */}
+                {msg.response && msg.response.status === 'insufficient' && !msg.text.includes('Security Notice') && (
                   <div style={{
                     marginTop: '12px',
                     padding: '10px 14px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     backgroundColor: '#FEF2F2',
                     border: '1px solid #FECACA',
                     display: 'flex',
@@ -244,45 +300,94 @@ export const QueryPage: React.FC = () => {
                     fontSize: '12px'
                   }}>
                     <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                    <span>Anti-Hallucination Guardrail: No verified coal-sector returns support this inquiry.</span>
+                    <span>Anti-Hallucination Guardrail: Verified source evidence is strictly enforced. No fabricated figures generated.</span>
                   </div>
                 )}
 
-                {/* Assistant Message Actions */}
+                {/* Assistant Message Actions & Follow-ups */}
                 {!isUser && msg.id !== 'msg-welcome' && (
                   <div style={{
-                    marginTop: '12px',
+                    marginTop: '14px',
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
                     gap: '8px',
-                    flexWrap: 'wrap'
+                    paddingTop: '10px',
+                    borderTop: '1px solid #F1F5F9'
                   }}>
-                    <button
-                      onClick={() => copyToClipboard(msg.text, msg.id)}
-                      className="btn btn-outline"
-                      style={{ padding: '4px 10px', fontSize: '11px' }}
-                    >
-                      {copiedId === msg.id ? (
-                        <>
-                          <Check size={12} style={{ color: '#10B981' }} />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} />
-                          <span>Copy Answer</span>
-                        </>
-                      )}
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => copyToClipboard(msg.text, msg.id)}
+                        className="btn btn-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
+                      >
+                        {copiedId === msg.id ? (
+                          <>
+                            <Check size={12} style={{ color: '#10B981' }} />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} />
+                            <span>Copy Answer</span>
+                          </>
+                        )}
+                      </button>
 
-                    <button
-                      onClick={() => handleCreateReportFromAnswer(msg.text)}
-                      className="btn btn-outline"
-                      style={{ padding: '4px 10px', fontSize: '11px' }}
-                    >
-                      <FileText size={12} />
-                      <span>Create Report Draft</span>
-                    </button>
+                      <button
+                        onClick={() => handleCreateReportFromAnswer(msg.text)}
+                        className="btn btn-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
+                      >
+                        <FileText size={12} />
+                        <span>Create Report Draft</span>
+                      </button>
+                    </div>
+
+                    {msg.response?.confidence && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Grounding Confidence: {Math.round(msg.response.confidence * 100)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Interactive Suggested Follow-Ups */}
+                {!isUser && msg.response?.suggestedFollowUps && msg.response.suggestedFollowUps.length > 0 && (
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #E2E8F0' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      Suggested Follow-Ups:
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {msg.response.suggestedFollowUps.map((followUp, fIdx) => (
+                        <button
+                          key={fIdx}
+                          type="button"
+                          onClick={() => {
+                            setQueryText(followUp);
+                            handleRunQuery(followUp);
+                          }}
+                          className="chat-suggestion-chip"
+                          style={{
+                            fontSize: '11px',
+                            padding: '4px 10px',
+                            borderRadius: '14px',
+                            backgroundColor: '#F1F5F9',
+                            border: '1px solid #E2E8F0',
+                            color: '#334155',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <Sparkles size={11} style={{ color: 'var(--accent-primary)' }} />
+                          <span>{followUp}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -290,8 +395,94 @@ export const QueryPage: React.FC = () => {
           );
         })}
 
+        {/* Welcome Hero State: 4 Quick Action Cards (Reference Image 1) */}
+        {isInitialState && (
+          <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '14px 18px',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--accent-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--accent-primary)',
+                flexShrink: 0
+              }}>
+                <Sparkles size={18} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+                  How can I help with your mining reports and operational data today?
+                </h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                  Select one of the verified inquiries below or ask a question directly in the prompt bar.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '12px'
+            }}>
+              {QUICK_PROMPT_CARDS.map((card, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    setQueryText(card.query);
+                    handleRunQuery(card.query);
+                  }}
+                  className="chat-suggestion-card"
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {card.title}
+                      </span>
+                      <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                        {card.tag}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
+                      {card.subtitle}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 600, marginTop: '12px' }}>
+                    <span>Ask this inquiry</span>
+                    <ArrowRight size={12} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Loading Spinner */}
         {isLoading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--border-subtle)', width: 'fit-content' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--border-subtle)', width: 'fit-content' }}>
             <div style={{
               width: '18px',
               height: '18px',
@@ -301,40 +492,41 @@ export const QueryPage: React.FC = () => {
               animation: 'spin 1s linear infinite'
             }} />
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              {thinkingMode ? 'Analyzing multi-subsidiary returns and verifying citations...' : 'Retrieving grounded evidence from verified returns...'}
+              {thinkingMode ? 'Analyzing multi-subsidiary returns and verifying source citations...' : 'Retrieving grounded evidence from verified returns...'}
             </span>
           </div>
         )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Prompts */}
-      <div style={{ marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+      {/* Responsive Suggested Chips (Clean wrapping, NO horizontal scrollbar! Addresses Bug Report Page 5) */}
+      <div style={{ marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', flexShrink: 0 }}>
-            Suggested:
+            Quick Prompts:
           </span>
-          {SUGGESTED_QUERIES.map((q, idx) => (
+          {BOTTOM_SUGGESTED_CHIPS.map((chip, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => {
-                setQueryText(q);
-                handleRunQuery(q);
+                setQueryText(chip);
+                handleRunQuery(chip);
               }}
+              className="chat-suggestion-chip"
               style={{
-                padding: '4px 10px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: 'var(--bg-app)',
+                padding: '3px 10px',
+                borderRadius: '12px',
+                backgroundColor: '#FFFFFF',
                 border: '1px solid var(--border-subtle)',
                 fontSize: '11px',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all var(--transition-fast)'
+                transition: 'all 0.15s ease'
               }}
             >
-              {q}
+              {chip}
             </button>
           ))}
         </div>
@@ -343,7 +535,7 @@ export const QueryPage: React.FC = () => {
       {/* Attached Documents Tags */}
       {attachedDocIds.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Attached:</span>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Attached Context:</span>
           {attachedDocIds.map(docId => {
             const doc = documents.find(d => d.id === docId);
             return (
@@ -361,7 +553,7 @@ export const QueryPage: React.FC = () => {
                 }}
               >
                 <Paperclip size={10} />
-                <span>{doc?.title.substring(0, 30)}...</span>
+                <span>{doc?.title.substring(0, 32)}...</span>
                 <X
                   size={12}
                   style={{ cursor: 'pointer' }}
@@ -374,7 +566,7 @@ export const QueryPage: React.FC = () => {
       )}
 
       {/* Composer Card */}
-      <div className="card-base" style={{ padding: '12px 16px', position: 'relative' }}>
+      <div className="card-base" style={{ padding: '12px 16px', position: 'relative', borderRadius: 'var(--radius-lg)' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Attachment Button */}
@@ -394,7 +586,7 @@ export const QueryPage: React.FC = () => {
                   position: 'absolute',
                   bottom: '48px',
                   left: 0,
-                  width: '280px',
+                  width: '300px',
                   backgroundColor: '#FFFFFF',
                   borderRadius: 'var(--radius-md)',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
@@ -403,7 +595,7 @@ export const QueryPage: React.FC = () => {
                   zIndex: 40
                 }}>
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                    Attach Documents ({documents.length})
+                    Attach Verified Documents ({documents.length})
                   </div>
                   <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {documents.map(doc => {
@@ -429,7 +621,7 @@ export const QueryPage: React.FC = () => {
                     type="button"
                     onClick={() => setIsAttachMenuOpen(false)}
                     className="btn btn-primary"
-                    style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '4px' }}
+                    style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '6px' }}
                   >
                     Done
                   </button>
@@ -443,7 +635,7 @@ export const QueryPage: React.FC = () => {
               value={queryText}
               onChange={(e) => setQueryText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask a question or describe the report you need (Shift+Enter for newline)..."
+              placeholder="Ask Ask-MineSetu or describe the statutory report draft you need (Shift+Enter for newline)..."
               style={{
                 flex: 1,
                 border: 'none',
@@ -462,12 +654,15 @@ export const QueryPage: React.FC = () => {
               disabled={isLoading || !queryText.trim()}
               className="btn btn-primary"
               style={{
-                height: '34px',
-                padding: '0 14px',
+                height: '36px',
+                padding: '0 16px',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '13px',
                 opacity: (!queryText.trim() || isLoading) ? 0.5 : 1,
-                cursor: (!queryText.trim() || isLoading) ? 'not-allowed' : 'pointer'
+                cursor: (!queryText.trim() || isLoading) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
               <Send size={14} />
@@ -498,7 +693,7 @@ export const QueryPage: React.FC = () => {
               <span>Deep Synthesis Mode (Simulate multi-step verification)</span>
             </label>
 
-            <span>Strictly grounded on verified returns · No external internet browsing</span>
+            <span>Strictly grounded on verified returns · Anti-hallucination guardrail active</span>
           </div>
         </form>
       </div>

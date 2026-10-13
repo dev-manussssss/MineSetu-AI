@@ -216,7 +216,7 @@ export const LandingPage: React.FC = () => {
           <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
             <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', backgroundColor: '#FAFAFA' }}>
               <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                1. Dual Ingestion Pipeline
+                1. Document Upload & Manual Entry Pipeline
               </div>
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
                 ECL Rajmahal OCP Monthly Return
@@ -298,7 +298,7 @@ export const LandingPage: React.FC = () => {
                 Upload operational documents (PDF, DOCX, XLSX, scanned returns) or enter records directly through structured manual data entry with units.
               </p>
               <div style={{ marginTop: '16px', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 600 }}>
-                Dual Ingestion Supported
+                Upload documents or enter data manually
               </div>
             </div>
 
@@ -320,13 +320,13 @@ export const LandingPage: React.FC = () => {
                 2
               </div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Review Extracted Data
+                Review and Verify Data
               </h3>
               <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', flex: 1 }}>
-                Inspect extracted fields side-by-side with source facsimiles. Correct ambiguous values and record verification notes before continuing.
+                Check the information extracted from your documents against the original files. Correct errors and confirm the values before continuing.
               </p>
               <div style={{ marginTop: '16px', fontSize: '11px', color: '#D97706', fontWeight: 600 }}>
-                Human-in-the-Loop Validation
+                Human Verification
               </div>
             </div>
 
@@ -466,10 +466,10 @@ export const LandingPage: React.FC = () => {
               <Search size={20} />
             </div>
             <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Intelligent Search
+              Ask-MineSetu (AI Chatbot)
             </h3>
             <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
-              Ask MineSetu performs grounded retrieval with mandatory citations, anti-hallucination guardrails, and explicit notification of missing data.
+              Ask-MineSetu is our AI chatbot for querying verified mining records, inspecting supporting evidence, and assisting with report preparation. Strictly grounded with citations and anti-hallucination guardrails.
             </p>
           </div>
 
@@ -571,7 +571,7 @@ export const LandingPage: React.FC = () => {
                 CMPDI
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
-                Technical record review, evidence inspection in validation workbench, discrepancy clarification, and technical reports.
+                CMPDI provides mine-planning, engineering, exploration, and technical consultancy support across CIL subsidiaries. Review technical records, inspect evidence in the validation workbench, identify discrepancies, and draft technical reports.
               </p>
               <button
                 onClick={() => handleLaunchRole('cmpdi')}
@@ -582,14 +582,14 @@ export const LandingPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Persona 4: Subsidiary / Mine Officer */}
+            {/* Persona 4: Mine Officer */}
             <div className="card-base" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span className="badge badge-neutral">Persona 4</span>
                 <span className="badge badge-neutral">Demo</span>
               </div>
               <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Subsidiary / Mine Officer
+                Mine Officer
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', flex: 1, marginBottom: '16px' }}>
                 Upload colliery documents, enter manual production records, answer requests from headquarters, and correct returned items.
@@ -599,7 +599,7 @@ export const LandingPage: React.FC = () => {
                 className="btn btn-outline"
                 style={{ width: '100%', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
               >
-                Launch Subsidiary Workspace →
+                Launch Mine Officer Workspace →
               </button>
             </div>
           </div>

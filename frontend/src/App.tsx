@@ -44,10 +44,10 @@ const RouteDispatcher: React.FC = () => {
 
       case '/ask':
       case '/query':
-        if (!can(currentUser, 'queries.execute')) return <AccessDenied route="Ask MineSetu" />;
+        if (!can(currentUser, 'queries.execute')) return <AccessDenied route="Ask-MineSetu" />;
         return (
           <DashboardLayout
-            pageTitle="Ask MineSetu"
+            pageTitle="Ask-MineSetu"
             pageSubtitle="Source-grounded inquiry assistant with mandatory evidence citations"
           >
             <QueryPage />
@@ -62,7 +62,7 @@ const RouteDispatcher: React.FC = () => {
         return (
           <DashboardLayout
             pageTitle="Documents & Ingestion"
-            pageSubtitle="Dual ingestion pipeline: Scanned PDF upload and first-class manual data entry"
+            pageSubtitle="Upload operational documents or enter structured shift data manually"
           >
             <DocumentsPage />
           </DashboardLayout>

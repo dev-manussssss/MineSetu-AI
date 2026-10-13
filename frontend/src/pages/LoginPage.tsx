@@ -184,7 +184,7 @@ export const LoginPage: React.FC = () => {
                     2. Search and Identify Gaps
                   </div>
                   <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px', lineHeight: '1.4' }}>
-                    Ask MineSetu retrieves verified records with citations and alerts on missing evidence.
+                    Ask-MineSetu retrieves verified records with citations and alerts on missing evidence.
                   </div>
                 </div>
               </div>
@@ -366,8 +366,8 @@ export const LoginPage: React.FC = () => {
                       </span>
                       <span className="badge badge-neutral" style={{ fontSize: '10px' }}>Technical</span>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      Technical record review, evidence inspection & discrepancy clarification
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', lineHeight: '1.4' }}>
+                      CMPDI provides mine-planning, engineering, exploration, and technical consultancy support across CIL subsidiaries.
                     </div>
                   </div>
                   {selectedRole === 'cmpdi' && (
@@ -375,7 +375,7 @@ export const LoginPage: React.FC = () => {
                   )}
                 </button>
 
-                {/* 4. Subsidiary / Mine Officer */}
+                {/* 4. Mine Officer */}
                 <button
                   type="button"
                   onClick={() => handleRoleSelect('subsidiary_officer')}
@@ -395,7 +395,7 @@ export const LoginPage: React.FC = () => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        Subsidiary / Mine Officer (ECL)
+                        Mine Officer (ECL)
                       </span>
                       <span className="badge badge-neutral" style={{ fontSize: '10px' }}>Operations</span>
                     </div>
