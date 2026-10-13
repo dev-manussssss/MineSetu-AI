@@ -19,13 +19,14 @@ const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
  * Use only for system-level operations (e.g., seed verification, migrations).
  */
 export function getAdminClient(): SupabaseClient {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  const key = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !key) {
     throw new Error(
-      'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. ' +
-      'Ensure these are set in your Vercel environment variables.'
+      'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY / VITE_SUPABASE_ANON_KEY. ' +
+      'Ensure these are set in your environment variables.'
     );
   }
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient(SUPABASE_URL, key, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
@@ -44,7 +45,8 @@ export function getUserClient(accessToken: string): SupabaseClient {
   const clientOptions: Record<string, any> = {
     auth: { autoRefreshToken: false, persistSession: false },
   };
-  if (accessToken && accessToken.trim().length > 0) {
+  const isRealJwt = accessToken && accessToken.trim().split('.').length === 3;
+  if (isRealJwt) {
     clientOptions.global = {
       headers: { Authorization: `Bearer ${accessToken}` },
     };

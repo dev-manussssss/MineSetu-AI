@@ -157,11 +157,39 @@ export interface GroundedSource {
 
 export interface AIQueryResponse {
   answer: string;
-  confidence: number;
+  confidence?: number;
   sources: GroundedSource[];
   status: 'sufficient' | 'insufficient' | 'conflicting';
   conflictDetails?: string;
   suggestedFollowUps?: string[];
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+  response?: AIQueryResponse;
+  isStreaming?: boolean;
+}
+
+export interface ChatContext {
+  subsidiaries: string[];
+  colliery?: string;
+  reportingPeriod?: string;
+  reportingYear?: number;
+  metric?: string;
+  lastIntent?: 'greeting' | 'query' | 'compare' | 'report' | 'clarification' | 'guardrail' | 'followup' | 'ambiguous_coal' | 'total_production' | 'source_citation' | string;
+}
+
+export interface ChatThread {
+  id: string;
+  userId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+  context: ChatContext;
 }
 
 export interface ReportDraft {

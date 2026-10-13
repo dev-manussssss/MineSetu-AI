@@ -19,6 +19,8 @@ import type {
   Role,
   User,
   Permission,
+  ChatContext,
+  AIQueryResponse,
 } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -46,18 +48,26 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    } catch {
+      // In offline or non-session environment, proceed to demo mode check
     }
   }
 
-  // In demo mode, attach the demo role header for /me endpoint
+  // In demo mode, attach the demo role and bearer token if no real session exists
   if (IS_DEMO_MODE) {
-    const demoRole = localStorage.getItem('minesetu_demo_role');
-    if (demoRole) {
-      headers['X-Demo-Role'] = demoRole;
+    const demoRole =
+      localStorage.getItem('minesetu_demo_role') ||
+      localStorage.getItem('minesetu_active_role') ||
+      'cmpdi';
+    if (!headers['Authorization']) {
+      headers['Authorization'] = `Bearer demo-token-${demoRole}`;
     }
+    headers['X-Demo-Role'] = demoRole;
   }
 
   return headers;
@@ -466,3 +476,83 @@ export const reportsApi = {
     }>(`/reports?action=download&id=${reportId}&format=${format}`);
   },
 };
+
+// ---------------------------------------------------------------------------
+// AI Query API
+// ---------------------------------------------------------------------------
+
+export const queryApi = {
+  async execute(
+    query: string,
+    context?: ChatContext,
+    thinkingMode = false,
+    attachedDocIds: string[] = []
+  ) {
+    return apiRequest<AIQueryResponse>('/query', {
+      method: 'POST',
+      body: JSON.stringify({ query, context, thinkingMode, attachedDocIds }),
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Public Coal-Sector Connectors API
+// ---------------------------------------------------------------------------
+
+export const connectorsApi = {
+  async list() {
+    return apiRequest<{
+      portals: Array<{
+        id: number;
+        name: string;
+        url: string;
+        tier: string;
+        access: string;
+        access_classification: string;
+        status: string;
+      }>;
+      totalCount: number;
+      activeCount: number;
+      lastSync: string;
+    }>('/connectors?action=list');
+  },
+
+  async records(portalId?: number) {
+    const q = portalId ? `&portalId=${portalId}` : '';
+    return apiRequest<{
+      records: Array<any>;
+      totalCount: number;
+    }>(`/connectors?action=records${q}`);
+  },
+
+  async sync(period = 'August 2026') {
+    return apiRequest<{
+      period: string;
+      totalProcessed: number;
+      newRecordsCount: number;
+      duplicateCount: number;
+      status: string;
+      syncedAt: string;
+      message: string;
+    }>('/connectors?action=sync', {
+      method: 'POST',
+      body: JSON.stringify({ period }),
+    });
+  },
+
+  async discrepancies() {
+    return apiRequest<{
+      discrepancies: Array<{
+        id: string;
+        type: string;
+        severity: string;
+        explanation: string;
+        [key: string]: any;
+      }>;
+      totalDiscrepancies: number;
+      analyzedAt: string;
+    }>('/connectors?action=discrepancies');
+  },
+};
+
+

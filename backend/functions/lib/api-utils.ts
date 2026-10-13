@@ -94,22 +94,57 @@ export async function authenticateRequest(
     };
   }
 
-  const supabase = getUserClient(token);
-  const { data, error } = await supabase.auth.getUser();
+  // Support demo persona tokens when demo mode is active and strictly non-production
+  const isDemo = process.env.VITE_APP_DEMO_MODE === 'true' && process.env.VITE_APP_ENV !== 'production';
+  if (isDemo && token.startsWith('demo-token-')) {
+    const rawRole = token.replace('demo-token-', '');
+    const canonicalRole = rawRole === 'ministry_official' ? 'ministry_coal'
+      : rawRole === 'cil_executive' ? 'cil_hq'
+      : rawRole === 'cmpdi_expert' ? 'cmpdi'
+      : rawRole;
 
-  if (error || !data.user) return null;
+    const personaDirectory: Record<string, { id: string; email: string; orgId: string; subCode: string | null; mineId: string | null }> = {
+      ministry_coal: { id: '33333333-3333-3333-3333-333333333301', email: 'ministry.exec@demo.coal.gov.in', orgId: '11111111-1111-1111-1111-111111111101', subCode: null, mineId: null },
+      cil_hq: { id: '33333333-3333-3333-3333-333333333302', email: 'cil.director@demo.coalindia.in', orgId: '11111111-1111-1111-1111-111111111102', subCode: null, mineId: null },
+      cmpdi: { id: '33333333-3333-3333-3333-333333333303', email: 'cmpdi.nodal@demo.cmpdi.co.in', orgId: '11111111-1111-1111-1111-111111111106', subCode: 'CMPDI', mineId: null },
+      subsidiary_officer: { id: '33333333-3333-3333-3333-333333333304', email: 'ecl.officer@demo.easterncoal.gov.in', orgId: '11111111-1111-1111-1111-111111111103', subCode: 'ECL', mineId: '22222222-2222-2222-2222-222222222201' },
+    };
 
-  const user = data.user;
-  return {
-    id: user.id,
-    email: user.email || '',
-    role: (user.app_metadata?.role as string) || 'subsidiary_officer',
-    organization_id: (user.app_metadata?.organization_id as string) || null,
-    subsidiary_code: (user.app_metadata?.subsidiary_code as string) || null,
-    mine_id: (user.app_metadata?.mine_id as string) || (user.user_metadata?.mine_id as string) || null,
-    app_metadata: user.app_metadata || {},
-    user_metadata: user.user_metadata || {},
-  };
+    const targetPersona = personaDirectory[canonicalRole];
+    if (targetPersona) {
+      return {
+        id: targetPersona.id,
+        email: targetPersona.email,
+        role: canonicalRole,
+        organization_id: targetPersona.orgId,
+        subsidiary_code: targetPersona.subCode,
+        mine_id: targetPersona.mineId,
+        app_metadata: { role: canonicalRole, organization_id: targetPersona.orgId, subsidiary_code: targetPersona.subCode },
+        user_metadata: { mine_id: targetPersona.mineId },
+      };
+    }
+  }
+
+  try {
+    const supabase = getUserClient(token);
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) return null;
+
+    const user = data.user;
+    return {
+      id: user.id,
+      email: user.email || '',
+      role: (user.app_metadata?.role as string) || 'subsidiary_officer',
+      organization_id: (user.app_metadata?.organization_id as string) || null,
+      subsidiary_code: (user.app_metadata?.subsidiary_code as string) || null,
+      mine_id: (user.app_metadata?.mine_id as string) || (user.user_metadata?.mine_id as string) || null,
+      app_metadata: user.app_metadata || {},
+      user_metadata: user.user_metadata || {},
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------

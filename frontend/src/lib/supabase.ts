@@ -7,8 +7,9 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const nodeEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || nodeEnv?.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || nodeEnv?.VITE_SUPABASE_ANON_KEY || '';
 
 let supabase: SupabaseClient | null = null;
 

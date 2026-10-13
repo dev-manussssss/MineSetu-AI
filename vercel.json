@@ -9,6 +9,7 @@
     { "source": "/api/v1/requests", "destination": "/api/v1/requests" },
     { "source": "/api/v1/reviews", "destination": "/api/v1/reviews" },
     { "source": "/api/v1/reports", "destination": "/api/v1/reports" },
+    { "source": "/api/v1/query", "destination": "/api/v1/query" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

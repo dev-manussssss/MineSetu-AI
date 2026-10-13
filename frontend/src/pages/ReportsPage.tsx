@@ -93,111 +93,145 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
-  // REAL EXPORT FUNCTIONALITY: Generates actual files in the browser
+  // REAL EXPORT FUNCTIONALITY: Downloads compiled binary documents (.docx, .xlsx, .pdf)
+  const downloadReportFile = async (format: 'pdf' | 'docx' | 'xlsx', fallbackFn: () => void) => {
+    if (!activeReport) return;
+    try {
+      const response = await fetch(`/api/v1/reports?action=download_file&id=${activeReport.id}&format=${format}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `MineSetu_${activeReport.title.replace(/\s+/g, '_')}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        const formatLabels: Record<string, string> = {
+          pdf: 'PDF document (.pdf)',
+          docx: 'Word document (.docx)',
+          xlsx: 'Excel workbook (.xlsx)'
+        };
+        showToast(`Compiled ${formatLabels[format] || format} downloaded successfully.`);
+        return;
+      }
+    } catch (err) {
+      console.warn(`[Reports] Server-side compiled export failed for ${format}, using client fallback`, err);
+    }
+    fallbackFn();
+  };
+
   const exportPDF = () => {
-    window.print();
-    showToast('Print / PDF export dialog opened.');
+    downloadReportFile('pdf', () => {
+      window.print();
+      showToast('Print / PDF export dialog opened.');
+    });
   };
 
   const exportDocx = () => {
     if (!activeReport) return;
-    const content = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><title>${activeReport.title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        h1 { color: #0F172A; }
-        h2 { color: #1E293B; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px; }
-        .meta { color: #64748B; font-size: 12px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-        th, td { border: 1px solid #CBD5E1; padding: 8px 10px; font-size: 12px; }
-        th { background: #F1F5F9; }
-      </style>
-      </head>
-      <body>
-        <h1>${activeReport.title}</h1>
-        <div class="meta">
-          <strong>Period:</strong> ${activeReport.reportingPeriod} | 
-          <strong>Status:</strong> ${activeReport.draftStatus.toUpperCase()} (Draft) |
-          <strong>Author:</strong> ${activeReport.author} |
-          <strong>Date:</strong> ${new Date(activeReport.generatedAt).toLocaleDateString()}
-        </div>
-        <h2>1. Executive Summary</h2>
-        <p>${activeReport.executiveSummary}</p>
-        <h2>2. Operational Data Returns</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Subsidiary</th>
-              <th>Colliery / Mine</th>
-              <th>Raw Coal (Tonnes)</th>
-              <th>OB Stripping (m³)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${activeReport.metricsTable.map(m => `
+    downloadReportFile('docx', () => {
+      const content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><title>${activeReport.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; }
+          h1 { color: #0F172A; }
+          h2 { color: #1E293B; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px; }
+          .meta { color: #64748B; font-size: 12px; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+          th, td { border: 1px solid #CBD5E1; padding: 8px 10px; font-size: 12px; }
+          th { background: #F1F5F9; }
+        </style>
+        </head>
+        <body>
+          <h1>${activeReport.title}</h1>
+          <div class="meta">
+            <strong>Period:</strong> ${activeReport.reportingPeriod} | 
+            <strong>Status:</strong> ${activeReport.draftStatus.toUpperCase()} (Draft) |
+            <strong>Author:</strong> ${activeReport.author} |
+            <strong>Date:</strong> ${new Date(activeReport.generatedAt).toLocaleDateString()}
+          </div>
+          <h2>1. Executive Summary</h2>
+          <p>${activeReport.executiveSummary}</p>
+          <h2>2. Operational Data Returns</h2>
+          <table>
+            <thead>
               <tr>
-                <td>${m.subsidiary}</td>
-                <td>${m.mine}</td>
-                <td>${m.coalTonnes}</td>
-                <td>${m.obM3}</td>
-                <td>${m.status}</td>
+                <th>Subsidiary</th>
+                <th>Colliery / Mine</th>
+                <th>Raw Coal (Tonnes)</th>
+                <th>OB Stripping (m³)</th>
+                <th>Status</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        <h2>3. Supporting Citations</h2>
-        <ul>
-          ${activeReport.sources.map(s => `<li>${s}</li>`).join('')}
-        </ul>
-      </body>
-      </html>
-    `;
-    const blob = new Blob([content], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `MineSetu_${activeReport.title.replace(/\s+/g, '_')}.doc`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Word document (.doc) generated and downloaded.');
+            </thead>
+            <tbody>
+              ${activeReport.metricsTable.map(m => `
+                <tr>
+                  <td>${m.subsidiary}</td>
+                  <td>${m.mine}</td>
+                  <td>${m.coalTonnes}</td>
+                  <td>${m.obM3}</td>
+                  <td>${m.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <h2>3. Supporting Citations</h2>
+          <ul>
+            ${activeReport.sources.map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        </body>
+        </html>
+      `;
+      const blob = new Blob([content], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `MineSetu_${activeReport.title.replace(/\s+/g, '_')}.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Word document (.doc) generated and downloaded.');
+    });
   };
 
   const exportExcel = () => {
     if (!activeReport) return;
-    const rows = [
-      ['MineSetu AI - Operational Report Export'],
-      ['Report Title', activeReport.title],
-      ['Reporting Period', activeReport.reportingPeriod],
-      ['Author', activeReport.author],
-      ['Generated At', activeReport.generatedAt],
-      [''],
-      ['Subsidiary', 'Colliery/Mine', 'Raw Coal (Tonnes)', 'Overburden (m³)', 'Status', 'Fidelity'],
-      ...activeReport.metricsTable.map(m => [
-        m.subsidiary,
-        m.mine,
-        m.coalTonnes,
-        m.obM3,
-        m.status,
-        m.confidence
-      ]),
-      [''],
-      ['Sources Cited:'],
-      ...activeReport.sources.map(s => [s])
-    ];
+    downloadReportFile('xlsx', () => {
+      const rows = [
+        ['MineSetu AI - Operational Report Export'],
+        ['Report Title', activeReport.title],
+        ['Reporting Period', activeReport.reportingPeriod],
+        ['Author', activeReport.author],
+        ['Generated At', activeReport.generatedAt],
+        [''],
+        ['Subsidiary', 'Colliery/Mine', 'Raw Coal (Tonnes)', 'Overburden (m³)', 'Status', 'Fidelity'],
+        ...activeReport.metricsTable.map(m => [
+          m.subsidiary,
+          m.mine,
+          m.coalTonnes,
+          m.obM3,
+          m.status,
+          m.confidence
+        ]),
+        [''],
+        ['Sources Cited:'],
+        ...activeReport.sources.map(s => [s])
+      ];
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `MineSetu_${activeReport.title.replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Excel/CSV spreadsheet generated and downloaded.');
+      const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `MineSetu_${activeReport.title.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Excel/CSV spreadsheet generated and downloaded.');
+    });
   };
 
   return (

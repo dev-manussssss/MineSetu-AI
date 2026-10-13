@@ -1,29 +1,38 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Send,
-  AlertTriangle,
-  ExternalLink,
-  BookOpen,
-  Copy,
-  Check,
-  RotateCcw,
+  Square,
   Paperclip,
   BrainCircuit,
+  Copy,
+  Check,
+  Plus,
+  History,
+  Trash2,
+  ExternalLink,
+  BookOpen,
   FileText,
   X,
   Sparkles,
   Bot,
-  User,
-  ArrowRight
+  User as UserIcon,
+  MessageSquare
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { MessageMarkdown } from '../components/chat/MessageMarkdown';
 
 export const QueryPage: React.FC = () => {
   const {
     currentUser,
     chatMessages,
     executeAIQuery,
-    clearChat,
+    threads,
+    activeThreadId,
+    createNewThread,
+    selectThread,
+    deleteThread,
+    stopStreaming,
+    isStreaming,
     navigateTo,
     selectDocument,
     documents
@@ -33,72 +42,51 @@ export const QueryPage: React.FC = () => {
   const [thinkingMode, setThinkingMode] = useState(false);
   const [attachedDocIds, setAttachedDocIds] = useState<string[]>([]);
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const QUICK_PROMPT_CARDS = [
-    {
-      title: 'Rajmahal Coal Production (ECL)',
-      subtitle: 'Raw coal excavation, OB removal & rail rakes',
-      query: 'What was the monthly coal production and OB removal at Rajmahal OCP?',
-      tag: 'ECL · Aug 2026'
-    },
-    {
-      title: 'Gevra Surface Miner Uptime (SECL)',
-      subtitle: 'Heavy excavation, surface miner hours & conveyor uptime',
-      query: 'What is the surface miner operating uptime and production at Gevra Mega Project?',
-      tag: 'SECL · Sep 2026'
-    },
-    {
-      title: 'Compare ECL & SECL Performance',
-      subtitle: 'Multi-subsidiary excavation, stripping & recovery metrics',
-      query: 'Compare Q2 operational excavation returns between ECL and SECL',
-      tag: 'Comparative'
-    },
-    {
-      title: 'Draft Operational Summary Report',
-      subtitle: 'Compile monitored multi-subsidiary returns into a brief',
-      query: 'Draft an operational summary report for monitored returns',
-      tag: 'Statutory Draft'
-    }
-  ];
-
-  const BOTTOM_SUGGESTED_CHIPS = [
-    'Rajmahal OCP production (ECL)',
-    'Gevra Mega Project surface miner (SECL)',
-    'Compare ECL vs SECL',
-    'Jayant OCP dragline productivity (NCL)',
-    'Piparwar washed coal despatches (CCL)',
-    'Moonidih UG washery yield (BCCL)',
-    'Draft operational summary report'
-  ];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Smooth scroll to bottom when new messages arrive or during streaming
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [chatMessages, isLoading]);
+  }, [chatMessages.length, isStreaming]);
+
+  // Adjust textarea height dynamically
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [queryText]);
 
   const handleRunQuery = async (queryToRun: string) => {
-    if (!queryToRun.trim() || isLoading) return;
-    setIsLoading(true);
+    const trimmed = queryToRun.trim();
+    if (!trimmed || isStreaming) return;
+
+    setQueryText('');
+    setAttachedDocIds([]);
+    setIsAttachMenuOpen(false);
+
     try {
-      await executeAIQuery(queryToRun, thinkingMode, attachedDocIds);
-      setQueryText('');
-      setAttachedDocIds([]);
+      await executeAIQuery(trimmed, thinkingMode, attachedDocIds);
     } catch (err: any) {
-      alert('AI Query failed: ' + (err.message || 'Unknown error'));
-    } finally {
-      setIsLoading(false);
+      console.error('[Ask-MineSetu Query Failed]', err);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleRunQuery(queryText);
+    if (isStreaming) {
+      stopStreaming();
+    } else {
+      handleRunQuery(queryText);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -119,423 +107,292 @@ export const QueryPage: React.FC = () => {
     navigateTo('/reports');
   };
 
-  const isInitialState = chatMessages.length === 1 && chatMessages[0].id === 'msg-welcome';
-
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Ask-MineSetu
-            </h1>
-            <span className="badge badge-neutral" style={{ fontSize: '11px' }}>Source-Grounded RAG</span>
-            <span className="badge badge-demo" style={{ fontSize: '11px', backgroundColor: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE' }}>
-              Verified Multi-Subsidiary Archive
-            </span>
-          </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '3px 0 0' }}>
-            Query verified operational returns, inspect original evidence citations, and draft statutory reports
-          </p>
+    <div className="ask-chat-workspace">
+      {/* 1. Quiet, Minimalist Header with Essential Controls */}
+      <header className="ask-top-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+            Ask-MineSetu
+          </h1>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* + New chat Button */}
           <button
-            onClick={clearChat}
+            onClick={() => {
+              createNewThread();
+              setIsHistoryOpen(false);
+            }}
             className="btn btn-outline"
-            style={{ fontSize: '12px', padding: '6px 12px' }}
-            title="Start new inquiry task"
+            style={{
+              fontSize: '12px',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: 500,
+              gap: '6px'
+            }}
+            title="Start a fresh empty conversation"
           >
-            <RotateCcw size={13} />
-            <span>Reset Conversation</span>
+            <Plus size={14} />
+            <span>New chat</span>
+          </button>
+
+          {/* History Drawer Toggle */}
+          <button
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className="btn btn-outline"
+            style={{
+              fontSize: '12px',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: 500,
+              gap: '6px',
+              backgroundColor: isHistoryOpen ? 'var(--bg-surface-muted)' : 'transparent'
+            }}
+            title="Open conversation history"
+          >
+            <History size={14} />
+            <span>History</span>
+            {threads.length > 0 && (
+              <span style={{
+                fontSize: '10px',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--accent-light)',
+                color: 'var(--accent-primary)',
+                fontWeight: 600
+              }}>
+                {threads.length}
+              </span>
+            )}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Conversation Scroll Container */}
-      <div
-        className="card-base"
-        style={{
-          flex: 1,
-          padding: '20px',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-          marginBottom: '12px',
-          backgroundColor: '#F8FAFC',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-subtle)'
-        }}
-      >
-        {chatMessages.map(msg => {
-          const isUser = msg.sender === 'user';
-          return (
-            <div
-              key={msg.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: isUser ? 'flex-end' : 'flex-start',
-                gap: '6px',
-                width: '100%'
-              }}
-            >
-              {/* Message Header / Timestamp */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '11px',
-                color: 'var(--text-muted)',
-                padding: '0 4px'
-              }}>
-                {isUser ? (
-                  <>
-                    <User size={12} />
-                    <span style={{ fontWeight: 600 }}>{currentUser.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <Bot size={13} style={{ color: 'var(--accent-primary)' }} />
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Ask-MineSetu</span>
-                    <span className="badge badge-demo" style={{ fontSize: '9px', padding: '1px 5px' }}>Verified Engine</span>
-                  </>
-                )}
-                <span>·</span>
-                <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-
-              {/* Message Bubble */}
-              <div
-                style={{
-                  maxWidth: isUser ? '82%' : '92%',
-                  padding: isUser ? '14px 18px' : '18px 22px',
-                  borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  backgroundColor: isUser ? '#1E293B' : '#FFFFFF',
-                  color: isUser ? '#FFFFFF' : 'var(--text-primary)',
-                  boxShadow: isUser ? '0 2px 4px rgba(15,23,42,0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
-                  border: isUser ? 'none' : '1px solid var(--border-subtle)',
-                  fontSize: '13px',
-                  lineHeight: '1.65'
-                }}
-              >
-                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {msg.text}
-                </div>
-
-                {/* Grounded Sources & Citations */}
-                {msg.response && msg.response.sources && msg.response.sources.length > 0 && (
-                  <div style={{
-                    marginTop: '16px',
-                    paddingTop: '14px',
-                    borderTop: '1px solid var(--border-subtle)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <BookOpen size={14} style={{ color: 'var(--accent-primary)' }} />
-                      <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
-                        Supporting Sources & Evidence Citations ({msg.response.sources.length})
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {msg.response.sources.map((src, sIdx) => (
-                        <div
-                          key={sIdx}
-                          style={{
-                            padding: '10px 14px',
-                            borderRadius: '8px',
-                            backgroundColor: '#F8FAFC',
-                            border: '1px solid var(--border-subtle)',
-                            fontSize: '12px'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                                {src.documentTitle}
-                              </span>
-                              <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                                {src.subsidiary}
-                              </span>
-                            </div>
-                            <span className="badge badge-match" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                              Page {src.pageNumber} {src.tableReference ? `· ${src.tableReference}` : ''}
-                            </span>
-                          </div>
-                          <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)', margin: '0 0 8px', lineHeight: '1.5' }}>
-                            "{src.excerpt}"
-                          </p>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                            <button
-                              onClick={() => {
-                                selectDocument(src.documentId);
-                                navigateTo('/documents/verify');
-                              }}
-                              className="btn btn-outline"
-                              style={{ padding: '3px 10px', fontSize: '11px', gap: '4px' }}
-                            >
-                              <ExternalLink size={11} /> Open in Validation Workbench
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Anti-Hallucination Guardrail / Insufficient Notice */}
-                {msg.response && msg.response.status === 'insufficient' && !msg.text.includes('Security Notice') && (
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: '#FEF2F2',
-                    border: '1px solid #FECACA',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    color: '#991B1B',
-                    fontSize: '12px'
-                  }}>
-                    <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                    <span>Anti-Hallucination Guardrail: Verified source evidence is strictly enforced. No fabricated figures generated.</span>
-                  </div>
-                )}
-
-                {/* Assistant Message Actions & Follow-ups */}
-                {!isUser && msg.id !== 'msg-welcome' && (
-                  <div style={{
-                    marginTop: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    paddingTop: '10px',
-                    borderTop: '1px solid #F1F5F9'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button
-                        onClick={() => copyToClipboard(msg.text, msg.id)}
-                        className="btn btn-outline"
-                        style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
-                      >
-                        {copiedId === msg.id ? (
-                          <>
-                            <Check size={12} style={{ color: '#10B981' }} />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={12} />
-                            <span>Copy Answer</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleCreateReportFromAnswer(msg.text)}
-                        className="btn btn-outline"
-                        style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
-                      >
-                        <FileText size={12} />
-                        <span>Create Report Draft</span>
-                      </button>
-                    </div>
-
-                    {msg.response?.confidence && (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Grounding Confidence: {Math.round(msg.response.confidence * 100)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Interactive Suggested Follow-Ups */}
-                {!isUser && msg.response?.suggestedFollowUps && msg.response.suggestedFollowUps.length > 0 && (
-                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #E2E8F0' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                      Suggested Follow-Ups:
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {msg.response.suggestedFollowUps.map((followUp, fIdx) => (
-                        <button
-                          key={fIdx}
-                          type="button"
-                          onClick={() => {
-                            setQueryText(followUp);
-                            handleRunQuery(followUp);
-                          }}
-                          className="chat-suggestion-chip"
-                          style={{
-                            fontSize: '11px',
-                            padding: '4px 10px',
-                            borderRadius: '14px',
-                            backgroundColor: '#F1F5F9',
-                            border: '1px solid #E2E8F0',
-                            color: '#334155',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            textAlign: 'left'
-                          }}
-                        >
-                          <Sparkles size={11} style={{ color: 'var(--accent-primary)' }} />
-                          <span>{followUp}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Welcome Hero State: 4 Quick Action Cards (Reference Image 1) */}
-        {isInitialState && (
-          <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* 2. Conversation Thread Container */}
+      <div className="ask-thread-scroll">
+        {chatMessages.length === 0 ? (
+          /* Empty State: Quiet greeting with one muted supporting sentence */
+          <div className="chat-empty-greeting">
             <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--accent-light)',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '14px 18px',
-              backgroundColor: '#FFFFFF',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+              justifyContent: 'center',
+              color: 'var(--accent-primary)',
+              marginBottom: '16px'
             }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--accent-light)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--accent-primary)',
-                flexShrink: 0
-              }}>
-                <Sparkles size={18} />
-              </div>
-              <div>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-                  How can I help with your mining reports and operational data today?
-                </h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                  Select one of the verified inquiries below or ask a question directly in the prompt bar.
-                </p>
-              </div>
+              <Sparkles size={20} />
             </div>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
+              How can I help you today?
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, maxWidth: '440px', lineHeight: '1.6' }}>
+              MineSetu helps with operational mining records and statutory reports across Coal India subsidiaries.
+            </p>
+          </div>
+        ) : (
+          /* Conversation Thread */
+          chatMessages.map(msg => {
+            const isUser = msg.sender === 'user';
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: isUser ? 'flex-end' : 'flex-start',
+                  gap: '6px',
+                  width: '100%'
+                }}
+              >
+                {/* Message Sender Header */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '11px',
+                  color: 'var(--text-muted)',
+                  padding: '0 4px'
+                }}>
+                  {isUser ? (
+                    <>
+                      <UserIcon size={12} />
+                      <span style={{ fontWeight: 600 }}>{currentUser.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bot size={13} style={{ color: 'var(--accent-primary)' }} />
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Ask-MineSetu</span>
+                    </>
+                  )}
+                  <span>·</span>
+                  <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '12px'
-            }}>
-              {QUICK_PROMPT_CARDS.map((card, idx) => (
+                {/* Message Surface */}
                 <div
-                  key={idx}
-                  onClick={() => {
-                    setQueryText(card.query);
-                    handleRunQuery(card.query);
-                  }}
-                  className="chat-suggestion-card"
                   style={{
-                    padding: '14px 16px',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid var(--border-subtle)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-                    transition: 'all 0.2s ease'
+                    maxWidth: isUser ? '82%' : '100%',
+                    padding: isUser ? '12px 18px' : '18px 22px',
+                    borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                    backgroundColor: isUser ? 'var(--bg-dark)' : '#FFFFFF',
+                    color: isUser ? '#FFFFFF' : 'var(--text-primary)',
+                    boxShadow: isUser ? '0 1px 3px rgba(15,23,42,0.1)' : '0 1px 3px rgba(0,0,0,0.04)',
+                    border: isUser ? 'none' : '1px solid var(--border-subtle)',
+                    fontSize: '13.5px',
+                    lineHeight: '1.65',
+                    width: isUser ? 'auto' : '100%'
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {card.title}
-                      </span>
-                      <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                        {card.tag}
-                      </span>
+                  {isUser ? (
+                    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {msg.text}
                     </div>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
-                      {card.subtitle}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 600, marginTop: '12px' }}>
-                    <span>Ask this inquiry</span>
-                    <ArrowRight size={12} />
-                  </div>
+                  ) : (
+                    /* High-Fidelity Assistant Markdown Rendering via Streamdown */
+                    <MessageMarkdown content={msg.text} isStreaming={msg.isStreaming} />
+                  )}
+
+                  {/* Supporting Evidence Citations (Rendered only when real evidence is present) */}
+                  {!isUser && msg.response?.sources && msg.response.sources.length > 0 && (
+                    <div style={{
+                      marginTop: '16px',
+                      paddingTop: '14px',
+                      borderTop: '1px solid var(--border-subtle)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                        <BookOpen size={14} style={{ color: 'var(--accent-primary)' }} />
+                        <span style={{ fontSize: '11px', fontWeight: 650, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
+                          Supporting Sources & Evidence Citations ({msg.response.sources.length})
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {msg.response.sources.map((src, sIdx) => (
+                          <div
+                            key={sIdx}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              backgroundColor: 'var(--bg-app)',
+                              border: '1px solid var(--border-subtle)',
+                              fontSize: '12px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                  {src.documentTitle}
+                                </span>
+                                <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                  {src.subsidiary}
+                                </span>
+                              </div>
+                              <span className="badge badge-match" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                Page {src.pageNumber} {src.tableReference ? `· ${src.tableReference}` : ''}
+                              </span>
+                            </div>
+                            <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)', margin: '0 0 8px', lineHeight: '1.5' }}>
+                              "{src.excerpt}"
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                              <button
+                                onClick={() => {
+                                  selectDocument(src.documentId);
+                                  navigateTo('/documents/verify');
+                                }}
+                                className="btn btn-outline"
+                                style={{ padding: '3px 10px', fontSize: '11px', gap: '4px' }}
+                              >
+                                <ExternalLink size={11} /> Open in Validation Workbench
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assistant Actions: Copy & Contextual Report Draft */}
+                  {!isUser && !msg.isStreaming && msg.text.trim().length > 0 && (
+                    <div style={{
+                      marginTop: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                      paddingTop: '10px',
+                      borderTop: '1px solid var(--border-subtle)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          onClick={() => copyToClipboard(msg.text, msg.id)}
+                          className="btn btn-outline"
+                          style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
+                          title="Copy response to clipboard"
+                        >
+                          {copiedId === msg.id ? (
+                            <>
+                              <Check size={12} style={{ color: '#10B981' }} />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copy Answer</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Contextual Report Draft action only when relevant */}
+                        {(msg.text.includes('Draft Operational Summary') || msg.text.includes('Report Draft') || msg.text.includes('Statutory Draft')) && (
+                          <button
+                            onClick={() => handleCreateReportFromAnswer(msg.text)}
+                            className="btn btn-outline"
+                            style={{ padding: '4px 10px', fontSize: '11px', gap: '5px' }}
+                            title="Load draft into Reports Builder"
+                          >
+                            <FileText size={12} />
+                            <span>Create Report Draft</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })
         )}
 
-        {/* Loading Spinner */}
-        {isLoading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--border-subtle)', width: 'fit-content' }}>
+        {/* Streaming Status Indicator */}
+        {isStreaming && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', fontSize: '12px', color: 'var(--text-muted)' }}>
             <div style={{
-              width: '18px',
-              height: '18px',
+              width: '14px',
+              height: '14px',
               borderRadius: '50%',
               border: '2px solid var(--border-subtle)',
               borderTopColor: 'var(--accent-primary)',
               animation: 'spin 1s linear infinite'
             }} />
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              {thinkingMode ? 'Analyzing multi-subsidiary returns and verifying source citations...' : 'Retrieving grounded evidence from verified returns...'}
-            </span>
+            <span>Searching records and generating response...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Responsive Suggested Chips (Clean wrapping, NO horizontal scrollbar! Addresses Bug Report Page 5) */}
-      <div style={{ marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', flexShrink: 0 }}>
-            Quick Prompts:
-          </span>
-          {BOTTOM_SUGGESTED_CHIPS.map((chip, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => {
-                setQueryText(chip);
-                handleRunQuery(chip);
-              }}
-              className="chat-suggestion-chip"
-              style={{
-                padding: '3px 10px',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid var(--border-subtle)',
-                fontSize: '11px',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Attached Documents Tags */}
+      {/* 3. Attached Documents Context Chips */}
       {attachedDocIds.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Attached Context:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '4px 0 8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Attached:</span>
           {attachedDocIds.map(docId => {
             const doc = documents.find(d => d.id === docId);
             return (
@@ -553,7 +410,7 @@ export const QueryPage: React.FC = () => {
                 }}
               >
                 <Paperclip size={10} />
-                <span>{doc?.title.substring(0, 32)}...</span>
+                <span>{doc?.title.substring(0, 28)}...</span>
                 <X
                   size={12}
                   style={{ cursor: 'pointer' }}
@@ -565,138 +422,301 @@ export const QueryPage: React.FC = () => {
         </div>
       )}
 
-      {/* Composer Card */}
-      <div className="card-base" style={{ padding: '12px 16px', position: 'relative', borderRadius: 'var(--radius-lg)' }}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Attachment Button */}
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
-                className="btn btn-outline"
-                style={{ padding: '8px', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title="Attach documents from available archive"
-              >
-                <Paperclip size={15} />
-              </button>
+      {/* 4. Modern Rounded Message Composer */}
+      <form onSubmit={handleSubmit} style={{ position: 'relative', marginTop: '6px' }}>
+        <div className="chat-composer-pill">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Message MineSetu... (Shift+Enter for newline)"
+            className="chat-composer-textarea"
+          />
 
-              {isAttachMenuOpen && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '48px',
-                  left: 0,
-                  width: '300px',
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                  border: '1px solid var(--border-subtle)',
-                  padding: '12px',
-                  zIndex: 40
-                }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                    Attach Verified Documents ({documents.length})
-                  </div>
-                  <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {documents.map(doc => {
-                      const isAttached = attachedDocIds.includes(doc.id);
-                      return (
-                        <label key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
-                          <input
-                            type="checkbox"
-                            checked={isAttached}
-                            onChange={(e) => {
-                              if (e.target.checked) setAttachedDocIds([...attachedDocIds, doc.id]);
-                              else setAttachedDocIds(attachedDocIds.filter(id => id !== doc.id));
-                            }}
-                          />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {doc.title}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsAttachMenuOpen(false)}
-                    className="btn btn-primary"
-                    style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '6px' }}
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Multiline Text Input */}
-            <textarea
-              rows={2}
-              value={queryText}
-              onChange={(e) => setQueryText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Ask-MineSetu or describe the statutory report draft you need (Shift+Enter for newline)..."
-              style={{
-                flex: 1,
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                fontSize: '13px',
-                fontFamily: 'inherit',
-                color: 'var(--text-primary)',
-                backgroundColor: 'transparent'
-              }}
-            />
-
-            {/* Send Button */}
-            <button
-              type="submit"
-              disabled={isLoading || !queryText.trim()}
-              className="btn btn-primary"
-              style={{
-                height: '36px',
-                padding: '0 16px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '13px',
-                opacity: (!queryText.trim() || isLoading) ? 0.5 : 1,
-                cursor: (!queryText.trim() || isLoading) ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <Send size={14} />
-              <span>Send</span>
-            </button>
-          </div>
-
-          {/* Composer Footer: Thinking Mode & Status */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '8px',
-            marginTop: '8px',
-            paddingTop: '8px',
-            borderTop: '1px solid var(--border-subtle)',
-            fontSize: '11px',
-            color: 'var(--text-muted)'
+            paddingTop: '6px',
+            borderTop: '1px solid var(--border-subtle)'
           }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={thinkingMode}
-                onChange={(e) => setThinkingMode(e.target.checked)}
-              />
-              <BrainCircuit size={13} style={{ color: thinkingMode ? 'var(--accent-primary)' : 'var(--text-muted)' }} />
-              <span>Deep Synthesis Mode (Simulate multi-step verification)</span>
-            </label>
+            {/* Left Controls: Attachments & Thinking Mode */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Attachment Picker */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '4px',
+                    cursor: 'pointer',
+                    color: attachedDocIds.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderRadius: '4px'
+                  }}
+                  title="Attach verified return from archive"
+                >
+                  <Paperclip size={15} />
+                </button>
 
-            <span>Strictly grounded on verified returns · Anti-hallucination guardrail active</span>
+                {isAttachMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '36px',
+                    left: 0,
+                    width: '280px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    border: '1px solid var(--border-subtle)',
+                    padding: '12px',
+                    zIndex: 40
+                  }}>
+                    <div style={{ fontSize: '11px', fontWeight: 650, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      Select Documents to Attach
+                    </div>
+                    <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {documents.map(doc => {
+                        const isAttached = attachedDocIds.includes(doc.id);
+                        return (
+                          <label key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={isAttached}
+                              onChange={(e) => {
+                                if (e.target.checked) setAttachedDocIds([...attachedDocIds, doc.id]);
+                                else setAttachedDocIds(attachedDocIds.filter(id => id !== doc.id));
+                              }}
+                            />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {doc.title}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAttachMenuOpen(false)}
+                      className="btn btn-primary"
+                      style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '5px' }}
+                    >
+                      Done
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Thinking / Deep Synthesis Mode Toggle */}
+              <button
+                type="button"
+                onClick={() => setThinkingMode(!thinkingMode)}
+                style={{
+                  background: thinkingMode ? 'var(--accent-light)' : 'transparent',
+                  border: thinkingMode ? '1px solid var(--accent-border)' : '1px solid transparent',
+                  borderRadius: '14px',
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  color: thinkingMode ? 'var(--accent-primary)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Toggle multi-step verification synthesis"
+              >
+                <BrainCircuit size={12} />
+                <span>Deep Synthesis</span>
+              </button>
+            </div>
+
+            {/* Right: Send or Stop-Generation Button */}
+            <div>
+              {isStreaming ? (
+                <button
+                  type="button"
+                  onClick={stopStreaming}
+                  className="btn btn-outline"
+                  style={{
+                    height: '32px',
+                    padding: '0 12px',
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    gap: '5px',
+                    color: '#DC2626',
+                    borderColor: '#FECACA'
+                  }}
+                  title="Stop generation"
+                >
+                  <Square size={11} fill="currentColor" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!queryText.trim()}
+                  className="btn btn-primary"
+                  style={{
+                    height: '32px',
+                    width: '32px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: !queryText.trim() ? 0.4 : 1,
+                    cursor: !queryText.trim() ? 'not-allowed' : 'pointer'
+                  }}
+                  title="Send message"
+                >
+                  <Send size={13} />
+                </button>
+              )}
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
+
+      {/* 5. Conversation History Slide-Over Drawer */}
+      {isHistoryOpen && (
+        <>
+          <div
+            onClick={() => setIsHistoryOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.3)',
+              zIndex: 48
+            }}
+          />
+          <aside style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '340px',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
+            zIndex: 50,
+            display: 'flex',
+            flexDirection: 'column',
+            borderLeft: '1px solid var(--border-subtle)'
+          }}>
+            {/* Drawer Header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: 'var(--bg-app)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageSquare size={16} style={{ color: 'var(--accent-primary)' }} />
+                <span style={{ fontSize: '14px', fontWeight: 650, color: 'var(--text-primary)' }}>
+                  Conversation History
+                </span>
+              </div>
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Action to Start New Chat from Drawer */}
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
+              <button
+                onClick={() => {
+                  createNewThread();
+                  setIsHistoryOpen(false);
+                }}
+                className="btn btn-primary"
+                style={{ width: '100%', fontSize: '12px', padding: '8px', justifyContent: 'center', gap: '6px' }}
+              >
+                <Plus size={14} />
+                <span>+ New chat</span>
+              </button>
+            </div>
+
+            {/* Thread List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
+              {threads.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', padding: '40px 16px' }}>
+                  No previous conversations yet.
+                </div>
+              ) : (
+                threads.map(thread => {
+                  const isActive = thread.id === activeThreadId;
+                  return (
+                    <div
+                      key={thread.id}
+                      onClick={() => {
+                        selectThread(thread.id);
+                        setIsHistoryOpen(false);
+                      }}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        marginBottom: '6px',
+                        backgroundColor: isActive ? 'var(--accent-light)' : 'transparent',
+                        border: isActive ? '1px solid var(--accent-border)' : '1px solid transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        transition: 'all var(--transition-fast)'
+                      }}
+                    >
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{
+                          fontSize: '12.5px',
+                          fontWeight: isActive ? 600 : 500,
+                          color: isActive ? 'var(--accent-primary)' : 'var(--text-primary)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {thread.title}
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {thread.messages.length} messages · {new Date(thread.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteThread(thread.id);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: '4px',
+                          cursor: 'pointer',
+                          color: 'var(--text-muted)',
+                          borderRadius: '4px'
+                        }}
+                        title="Delete conversation"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 };

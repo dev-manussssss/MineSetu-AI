@@ -190,5 +190,184 @@ class TestReportCompiler(unittest.TestCase):
         self.assertNotIn("xlsx", res.exported_files)
 
 
+class TestPhase2DocumentIngestionAndWorker(unittest.TestCase):
+    def setUp(self):
+        self.extractor = DocumentExtractor()
+        from worker import QueueWorker
+        self.worker = QueueWorker()
+
+    def test_scanned_detection_and_honest_ocr_boundary(self):
+        # Empty text with mock PDF stream represents scanned raster PDF
+        res = self.extractor.process_document(
+            doc_id="scanned-doc-001",
+            text_content="",
+            file_name="Scanned_Kusmunda_Return.pdf"
+        )
+        self.assertEqual(res.document_id, "scanned-doc-001")
+        self.assertEqual(res.overall_confidence, 0.0)
+        self.assertEqual(len(res.extracted_fields), 0)
+
+    def test_stripping_ratio_consistency_cross_check(self):
+        # Return with inconsistent stripping ratio (claimed 1.5 vs computed 142500/45210 = 3.15)
+        inconsistent_return = (
+            "STATUTORY OPERATIONAL RETURN\n"
+            "Raw Coal Production: 45,210 Tonnes\n"
+            "Overburden Removal: 142,500 m3\n"
+            "Composite Stripping Ratio: 1.50 m3/T\n"
+        )
+        res = self.extractor.process_document(
+            doc_id="inconsistent-doc",
+            text_content=inconsistent_return
+        )
+        sr_field = next(f for f in res.extracted_fields if f.field_name == "stripping_ratio")
+        self.assertLessEqual(sr_field.confidence, 70.0)
+        self.assertIn("Warning: Claimed 1.5", sr_field.source_snippet)
+
+    def test_worker_dispatches_document_ocr(self):
+        job = {
+            "id": "job-ocr-001",
+            "job_type": "document_ocr",
+            "entity_id": "test-doc-001",
+            "payload": {
+                "text_content": "Raw Coal Production: 45,210 Tonnes\nOverburden Removal: 142,500 m3"
+            }
+        }
+        success = self.worker.process_job(job)
+        self.assertTrue(success)
+
+    def test_worker_dispatches_report_export(self):
+        job = {
+            "id": "job-rep-001",
+            "job_type": "report_export",
+            "entity_id": "test-rep-001",
+            "payload": {
+                "title": "Quarterly Operations",
+                "formats": ["pdf"]
+            }
+        }
+        success = self.worker.process_job(job)
+        self.assertTrue(success)
+
+    def test_worker_dispatches_topic_modeling(self):
+        job = {
+            "id": "job-top-001",
+            "job_type": "topic_modeling",
+            "payload": {
+                "documents": ["Coal excavation daily progress", "Environmental monitoring compliance"]
+            }
+        }
+        success = self.worker.process_job(job)
+        self.assertTrue(success)
+
+    def test_worker_rejects_unknown_job_type_safely(self):
+        job = {
+            "id": "job-unknown-001",
+            "job_type": "unsupported_blockchain_action",
+            "payload": {}
+        }
+        with self.assertRaises(ValueError) as ctx:
+            self.worker.process_job(job)
+        self.assertIn("Unknown or unsupported job type", str(ctx.exception))
+
+
+class TestPhase4ReportCompilationAndAnalytics(unittest.TestCase):
+    """Verifies Phase 4 multi-format compilation, arithmetic guards, formula sanitization, and topic modeling."""
+
+    def setUp(self):
+        self.compiler = ReportCompiler()
+        self.topic_modeler = TopicModeler()
+
+    def test_formula_injection_sanitization(self):
+        from pipeline.compiler import sanitize_cell_value
+        self.assertEqual(sanitize_cell_value("=cmd|' /C calc'!A0"), "'=cmd|' /C calc'!A0")
+        self.assertEqual(sanitize_cell_value("@SUM(A1:A10)"), "'@SUM(A1:A10)")
+        self.assertEqual(sanitize_cell_value("+12345"), "'+12345")
+        self.assertEqual(sanitize_cell_value("-999"), "'-999")
+        self.assertEqual(sanitize_cell_value("Rajmahal OCP"), "Rajmahal OCP")
+        self.assertEqual(sanitize_cell_value(45210), 45210)
+
+    def test_multi_format_compilation_creates_valid_files(self):
+        req = ReportCompileRequest(
+            report_id="rep-test-phase4-001",
+            title="Q2 Operational Review",
+            reporting_period="Q2 FY 2026",
+            scope="Consolidated",
+            executive_summary="Consolidated quarterly review of monitored Coal India operational returns.",
+            metrics_table=[
+                ReportMetricRow(
+                    subsidiary="ECL",
+                    mine="Rajmahal OCP",
+                    coal_tonnes="45,210",
+                    ob_m3="142,500",
+                    status="Verified",
+                    confidence="98%"
+                ),
+                ReportMetricRow(
+                    subsidiary="SECL",
+                    mine="Gevra OCP",
+                    coal_tonnes="524,300",
+                    ob_m3="1,120,000",
+                    status="Approved",
+                    confidence="99%"
+                )
+            ],
+            sources=["ECL_Rajmahal_Aug2026.pdf", "SECL_Gevra_Sep2026.pdf"],
+            formats=["docx", "xlsx", "pdf"]
+        )
+
+        result = self.compiler.compile_all(req)
+        self.assertEqual(result.status, "completed")
+        self.assertIn("docx", result.exported_files)
+        self.assertIn("xlsx", result.exported_files)
+        self.assertIn("pdf", result.exported_files)
+
+        for fmt, path in result.exported_files.items():
+            self.assertTrue(os.path.exists(path), f"File {path} must exist on disk")
+            size = os.path.getsize(path)
+            self.assertGreater(size, 0, f"File {path} must not be zero-byte (size={size})")
+
+    def test_arithmetic_cross_checks_in_report(self):
+        rows = [
+            ReportMetricRow(
+                subsidiary="ECL",
+                mine="Rajmahal OCP",
+                coal_tonnes="45,210",
+                ob_m3="142,500",
+                status="Verified",
+                confidence="98%"
+            ),
+            ReportMetricRow(
+                subsidiary="SECL",
+                mine="Gevra OCP",
+                coal_tonnes="524,300",
+                ob_m3="1,120,000",
+                status="Approved",
+                confidence="99%"
+            )
+        ]
+        summary = self.compiler._compute_arithmetic_summary(rows)
+        self.assertEqual(summary["total_coal_tonnes"], 569510.0)
+        self.assertEqual(summary["total_ob_m3"], 1262500.0)
+        # Stripping ratio = 1262500 / 569510 = 2.22
+        self.assertEqual(summary["consolidated_stripping_ratio"], 2.22)
+        self.assertEqual(len(summary["row_checks"]), 2)
+
+    def test_topic_modeling_corpus_extraction(self):
+        docs = [
+            "Daily coal excavation reached peak output across northern dragline benches with shovel-dumper spreads.",
+            "Quarterly air quality and water monitoring reports submitted to State Pollution Control Board.",
+            "Eighteen BOXN rakes loaded at captive railway siding for NTPC thermal power station.",
+            "Statutory DGMS safety inspection completed with zero reportable accidents."
+        ]
+        result = self.topic_modeler.compute_topics(docs)
+        self.assertEqual(result.total_documents, 4)
+        self.assertGreater(result.vocabulary_size, 5)
+        self.assertEqual(len(result.clusters), 4)
+        cluster_names = [c.name for c in result.clusters]
+        self.assertIn("Excavation & Production", cluster_names)
+        self.assertIn("Environmental Clearances & Forest Land", cluster_names)
+
+
 if __name__ == "__main__":
     unittest.main()
+

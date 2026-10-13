@@ -3,7 +3,16 @@ MineSetu AI — AI Processing Engine Configuration
 """
 
 import os
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    try:
+        from pydantic import BaseSettings
+    except ImportError:
+        class BaseSettings:  # type: ignore
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
 from typing import List
 
 
@@ -25,8 +34,10 @@ class Settings(BaseSettings):
     BUCKET_FACSIMILES: str = "facsimiles"
     BUCKET_EXPORTS: str = "exports"
 
-    # AI Model Providers
-    GROK_API_KEY_PRIMARY: str = os.getenv("GROK_API_KEY_PRIMARY", "")
+    # AI Model Providers (3-Tier Failover: Primary -> Secondary -> Tertiary)
+    GROK_API_KEY_PRIMARY: str = os.getenv("GROK_API_KEY_PRIMARY", os.getenv("LLM_API_KEY_PRIMARY", ""))
+    GROK_API_KEY_SECONDARY: str = os.getenv("GROK_API_KEY_SECONDARY", os.getenv("GROK_API_KEY_FALLBACK", os.getenv("LLM_API_KEY_SECONDARY", "")))
+    GROK_API_KEY_TERTIARY: str = os.getenv("GROK_API_KEY_TERTIARY", os.getenv("LLM_API_KEY_TERTIARY", ""))
     GROK_BASE_URL: str = os.getenv("GROK_BASE_URL", "https://api.x.ai/v1")
     GROK_MODEL_ID: str = os.getenv("GROK_MODEL_ID", "grok-2-1212")
     EMBEDDING_MODEL_ID: str = os.getenv("EMBEDDING_MODEL_ID", "text-embedding-3-small")
@@ -48,13 +59,23 @@ class Settings(BaseSettings):
         "https://minesetu.vercel.app"
     ]
 
+    def get_configured_grok_keys(self) -> List[str]:
+        """Returns valid non-placeholder API keys in priority order: Primary -> Secondary -> Tertiary."""
+        candidates = [self.GROK_API_KEY_PRIMARY, self.GROK_API_KEY_SECONDARY, self.GROK_API_KEY_TERTIARY]
+        return [
+            k for k in candidates
+            if k and not k.startswith("xai-") and not k.endswith("-here") and len(k) > 10
+        ]
+
     def validate_environment(self) -> dict:
         """Validates critical runtime configuration without printing secret values."""
+        configured_keys = self.get_configured_grok_keys()
         return {
             "app_name": self.APP_NAME,
             "version": self.APP_VERSION,
             "supabase_configured": bool(self.SUPABASE_URL and self.SUPABASE_SERVICE_ROLE_KEY),
-            "grok_api_configured": bool(self.GROK_API_KEY_PRIMARY),
+            "grok_api_configured": bool(self.GROK_API_KEY_PRIMARY or self.GROK_API_KEY_SECONDARY or self.GROK_API_KEY_TERTIARY),
+            "grok_keys_count": len(configured_keys),
             "worker_enabled": self.WORKER_ENABLED,
             "cors_origin_count": len(self.CORS_ORIGINS),
         }

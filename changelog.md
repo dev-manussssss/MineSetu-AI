@@ -2,6 +2,41 @@
 
 All notable changes and architectural decisions for this project are documented here in accordance with `docs/guidelines.md`.
 
+## [1.2.0-beta.1] - Controlled Beta Release: Complete Six-Phase Implementation & Verification (2026-10-13)
+
+### Added
+- **Phase 1: Real API Gateway Integration & Persistence**:
+  - Configured Vite Local API Gateway (`frontend/vite.config.ts`) executing all 8 serverless function endpoints (`/api/v1/auth/*`, `/api/v1/documents`, `/api/v1/manual-records`, `/api/v1/query`, `/api/v1/reports`, `/api/v1/requests`, `/api/v1/reviews`, `/api/v1/connectors`) with Vercel request/response semantics during local development.
+  - Server-side RBAC and tenant isolation across the 4 primary personas (`ministry_coal`, `cil_hq`, `cmpdi`, `subsidiary_officer`) in `backend/functions/lib/api-utils.ts` and `supabase.ts`.
+  - Automated integration test suite (`tests/unit/phase1-integration.test.mjs`) covering persona metadata, tenant isolation, upload intent, and manual records.
+- **Phase 2: Document Ingestion, Python AI Engine & Durable Workers**:
+  - Durable worker architecture (`services/ai-engine/worker.py`) with atomic job claiming (`claim_processing_job`), lease heartbeats, and graceful error categorization.
+  - PyMuPDF coordinate-aware extraction pipeline (`services/ai-engine/pipeline/extractor.py`) with normalized bounding boxes `[0..1000]`.
+  - Honest scanned PDF boundary detection (`scanned_pdf_needs_ocr`) and statutory metric extraction (`annual_target_mt`, `achievement_pct`).
+  - Unit test suite (`services/ai-engine/tests/test_ai_engine.py`) with 31 passing Python tests.
+- **Phase 3: Real Evidence Retrieval, RAG & Grounded Answers**:
+  - Dynamic database evidence retrieval in `backend/functions/api/v1/query.ts` over `organizations`, `mines`, and `manual_records`.
+  - Strict "No Evidence, No Final Answer" anti-hallucination guardrail (`status: 'insufficient'` with 0 sources).
+  - Prompt injection defense neutralizing system instruction override attempts.
+  - Exact source citations with document IDs, page numbers, and bounding box coordinates.
+  - Automated RAG integration suite (`tests/unit/phase3-rag.test.mjs`, 7 tests) and Promptfoo ground-truth evaluation benchmark (8 assertions, 100% pass).
+- **Phase 4: Native Report Generation, Topic Analysis & Analytics**:
+  - Native binary generation for `.docx` (python-docx), `.xlsx` (openpyxl), and `.pdf` (ReportLab) in `services/ai-engine/pipeline/compiler.py`.
+  - Spreadsheet formula injection protection (CWE-1236) quoting cells beginning with `=`, `+`, `-`, `@`.
+  - Authenticated binary download endpoint (`action=download_file`) in `backend/functions/api/v1/reports.ts`.
+  - Unit and integration tests (`tests/unit/phase4-reports.test.mjs`, 6 tests; Python tests 26-29, 4 tests).
+- **Phase 5: Public Coal-Sector Data Connectors & Ingestion**:
+  - Statutory catalog classification for 27 coal portals (`services/ai-engine/connectors/registry.py`) with honest access states (`live_pollable`, `verified_static_snapshot`, `restricted_internal`, `blocked_restricted`).
+  - SHA-256 provenance tracking, tamper detection, and idempotent ingestion deduplicating records.
+  - Automated discrepancy detection cross-referencing CCO national statistics vs colliery returns.
+  - Connector endpoints (`/api/v1/connectors`) and test suites (`tests/unit/phase5-connectors.test.mjs`, 5 tests; Python tests 11-13, 3 tests).
+- **Phase 6: Source Viewer, Complete Integration & Beta Release Validation**:
+  - Enhanced `ValidationWorkbenchPage.tsx` with synchronized field highlighting, normalized coordinate bounding boxes (`[0..1000]`), visual before/after comparison between raw extracted and verified values, and citation deep-linking.
+  - 13-step Beta User Journey Playwright E2E suite (`tests/e2e/beta-journey.spec.ts`, 15 test passes across Desktop 1440, Desktop 1280, Mobile 390).
+  - Multi-viewport responsive verification (39/39 Playwright tests passed, 100%).
+  - Zero modifications to `frontend/src/components/Sidebar.tsx` preserving original branding and navigation integrity.
+  - Master tracking documentation: `PROGRESS.md`, `BETA_TEST_PLAN.md`, `IMPLEMENTATION_PLAN.md`, and `IMPLEMENTATION_REPORT.md`.
+
 ## [1.1.0] - Repository Audit, Documentation Reset & Architecture Alignment (2026-10-04)
 
 ### Added

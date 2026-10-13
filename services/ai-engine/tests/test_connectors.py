@@ -224,6 +224,36 @@ class TestPortalConnectors(unittest.TestCase):
         self.assertIsInstance(records, list)
         self.assertGreaterEqual(len(records), 7)  # MDMS returns 2, others return at least 1
 
+    def test_11_all_27_portals_honest_access_classification(self):
+        """Verifies all 27 portals have honest access classifications."""
+        valid_classes = {"live_pollable", "verified_static_snapshot", "restricted_internal", "blocked_restricted"}
+        for p in ALL_27_PORTALS:
+            self.assertIn("access_classification", p)
+            self.assertIn(p["access_classification"], valid_classes)
+
+    def test_12_idempotent_ingestion_and_deduplication(self):
+        """Verifies repeated ingestion runs are idempotent and deduplicate identical records."""
+        # Run 1: initial ingestion
+        run1 = self.registry.ingest_all_idempotent("August 2026")
+        self.assertGreaterEqual(run1["new_records_count"], 7)
+        self.assertEqual(run1["duplicate_count"], 0)
+
+        # Run 2: identical second ingestion
+        run2 = self.registry.ingest_all_idempotent("August 2026")
+        self.assertEqual(run2["new_records_count"], 0)
+        self.assertGreaterEqual(run2["duplicate_count"], 7)
+
+    def test_13_cross_reference_discrepancy_detection(self):
+        """Verifies discrepancy detection cross-references public figures vs returns."""
+        discrepancies = self.registry.detect_discrepancies()
+        self.assertIsInstance(discrepancies, list)
+        # Discrepancy detection runs on active MVP records
+        for d in discrepancies:
+            self.assertIn("type", d)
+            self.assertIn("severity", d)
+            self.assertIn("explanation", d)
+
 
 if __name__ == "__main__":
     unittest.main()
+

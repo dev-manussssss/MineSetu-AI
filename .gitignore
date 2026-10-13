@@ -38,6 +38,9 @@ Thumbs.db
 coverage/
 tests/qa-evidence/*.png
 !tests/qa-evidence/qa-report.json
+playwright-report/
+test-results/
+.promptfoo/
 
 # Local scratch and temp
 scratch/

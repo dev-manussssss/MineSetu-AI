@@ -68,6 +68,8 @@ class DocumentProcessResult(BaseModel):
     extracted_fields: List[ExtractedField]
     overall_confidence: float
     summary: str
+    extraction_method: str = "pymupdf_text_layer"
+    is_scanned: bool = False
     facsimile_paths: List[str] = []
     chunk_count: int = 0
     processing_time_ms: float

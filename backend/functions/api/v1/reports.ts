@@ -10,6 +10,8 @@
  * - GET  /api/v1/reports?action=download&id=X&format=pdf — Download compiled report
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   handleCors,
@@ -40,6 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleCompile(req, res);
       case 'download':
         return await handleDownload(req, res);
+      case 'download_file':
+        return await handleDownloadFile(req, res);
       default:
         return jsonError(res, `Unknown reports action: ${action}`, 404);
     }
@@ -259,31 +263,76 @@ async function handleDownload(req: VercelRequest, res: VercelResponse) {
   const token = req.headers.authorization!.slice(7);
   const supabase = getUserClient(token);
 
-  // Check report_exports table
-  const { data: exportItem, error } = await supabase
-    .from('report_exports')
-    .select('storage_path, format')
-    .eq('draft_id', reportId)
-    .eq('format', format)
-    .limit(1)
-    .maybeSingle();
+  // Check report_exports table if supabase is connected
+  try {
+    const { data: exportItem } = await supabase
+      .from('report_exports')
+      .select('storage_path, format')
+      .eq('draft_id', reportId)
+      .eq('format', format)
+      .limit(1)
+      .maybeSingle();
 
-  if (error || !exportItem) {
-    return jsonError(res, `Report not compiled in ${format} format yet`, 404);
+    if (exportItem?.storage_path) {
+      const adminClient = getAdminClient();
+      const { data: signedUrl } = await adminClient.storage
+        .from('report-exports')
+        .createSignedUrl(exportItem.storage_path, 3600);
+
+      if (signedUrl?.signedUrl) {
+        return jsonOk(res, {
+          reportId,
+          format,
+          downloadUrl: signedUrl.signedUrl,
+          expiresIn: 3600,
+        });
+      }
+    }
+  } catch (err) {
+    // Non-fatal, check local export artifact
   }
 
-  // Generate signed download URL (valid for 1 hour)
-  const adminClient = getAdminClient();
-  const { data: signedUrl, error: signError } = await adminClient.storage
-    .from('report-exports')
-    .createSignedUrl(exportItem.storage_path, 3600);
+  // Check if compiled file exists on disk
+  const localFilePath = path.resolve(process.cwd(), 'exports', reportId, `${reportId}.${format}`);
+  if (fs.existsSync(localFilePath)) {
+    return jsonOk(res, {
+      reportId,
+      format,
+      downloadUrl: `/api/v1/reports?action=download_file&id=${reportId}&format=${format}`,
+      expiresIn: 3600,
+    });
+  }
 
-  if (signError) return jsonError(res, `Storage error: ${signError.message}`, 500);
+  return jsonError(res, `Report not compiled in ${format} format yet`, 404);
+}
 
-  return jsonOk(res, {
-    reportId,
-    format,
-    downloadUrl: signedUrl.signedUrl,
-    expiresIn: 3600,
-  });
+/**
+ * GET /api/v1/reports?action=download_file&id=X&format=pdf
+ * Serves compiled binary file directly
+ */
+async function handleDownloadFile(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') return json405(res, ['GET']);
+
+  const reportId = req.query.id as string;
+  const format = ((req.query.format as string) || 'pdf').toLowerCase();
+  if (!reportId) return jsonError(res, 'Missing report id', 400);
+
+  const localFilePath = path.resolve(process.cwd(), 'exports', reportId, `${reportId}.${format}`);
+  if (!fs.existsSync(localFilePath)) {
+    return jsonError(res, `Report file not found: ${format}`, 404);
+  }
+
+  const mimeMap: Record<string, string> = {
+    pdf: 'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+
+  const contentType = mimeMap[format] || 'application/octet-stream';
+  const fileBuffer = fs.readFileSync(localFilePath);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${reportId}.${format}"`);
+  res.setHeader('Content-Length', fileBuffer.length);
+  return res.status(200).send(fileBuffer);
 }

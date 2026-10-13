@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   AlertCircle,
@@ -17,10 +17,28 @@ export const ValidationWorkbenchPage: React.FC = () => {
     currentUser,
     documents,
     selectedDocumentId,
+    selectDocument,
     updateExtractedField,
     setDocumentStatus,
     navigateTo
   } = useApp();
+
+  // Handle URL deep-linking (e.g. ?docId=doc-ecl-001&fieldId=f-1)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const docParam = params.get('docId') || params.get('documentId');
+      if (docParam && docParam !== selectedDocumentId) {
+        selectDocument(docParam);
+      }
+      const fieldParam = params.get('fieldId') || params.get('field');
+      if (fieldParam) {
+        setHoveredFieldId(fieldParam);
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
 
   // Resolve active document
   const activeDoc = documents.find(d => d.id === selectedDocumentId) || documents[0];
@@ -240,9 +258,19 @@ export const ValidationWorkbenchPage: React.FC = () => {
                             transition: 'all var(--transition-fast)'
                           }}
                         >
-                          <td style={{ padding: '6px 8px', fontWeight: isHighlighted ? 700 : 400 }}>{f.label}</td>
+                          <td style={{ padding: '6px 8px', fontWeight: isHighlighted ? 700 : 400 }}>
+                            {f.label}
+                            <span style={{ display: 'block', fontSize: '10px', color: isHighlighted ? '#B45309' : '#64748B' }}>
+                              Page {f.pageNumber}{f.boundingBox ? ` • BBox [${f.boundingBox.join(', ')}]` : ''}
+                            </span>
+                          </td>
                           <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 700, color: isHighlighted ? '#92400E' : 'inherit' }}>
-                            {f.verifiedValue || f.extractedValue}
+                            <div>{f.verifiedValue || f.extractedValue}</div>
+                            {f.verifiedValue && f.verifiedValue !== f.extractedValue && (
+                              <div style={{ fontSize: '9px', color: '#94A3B8', textDecoration: 'line-through' }}>
+                                Raw: {f.extractedValue}
+                              </div>
+                            )}
                           </td>
                           <td style={{ padding: '6px 8px', color: '#64748B' }}>{f.unit}</td>
                         </tr>
@@ -309,21 +337,31 @@ export const ValidationWorkbenchPage: React.FC = () => {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {field.label}
-                      </span>
-                      <span style={{
-                        fontSize: '10px',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: isHighConf ? '#ECFDF5' : '#FFFBEB',
-                        color: isHighConf ? '#065F46' : '#92400E',
-                        fontWeight: 600
-                      }}>
-                        {confPercent.toFixed(0)}% Confidence
-                      </span>
-                    </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {field.label}
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: isHighConf ? '#ECFDF5' : '#FFFBEB',
+                          color: isHighConf ? '#065F46' : '#92400E',
+                          fontWeight: 600
+                        }}>
+                          {confPercent.toFixed(0)}% Confidence
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: '#F1F5F9',
+                          color: '#475569',
+                          fontFamily: 'var(--font-mono)'
+                        }}>
+                          p.{field.pageNumber}{field.boundingBox ? ` [${field.boundingBox.join(',')}]` : ''}
+                        </span>
+                      </div>
 
                     {!isEditing && (
                       <button
